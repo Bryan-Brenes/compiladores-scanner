@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 %%
 %class Scanner
 %standalone
@@ -9,6 +10,18 @@
  */
 Whitespace=[\t\n]
 numeros=[0-9]
+
+%{
+  public static ArrayList<Token> tokens = new ArrayList<>();  
+%}
+
+%eofval{
+  for(Token t: tokens){
+    t.print();
+  }
+  return 0;
+%eofval}
+
 %%
 
 /** 
@@ -55,6 +68,9 @@ ufixed |
 uint |
 var |
 view |
-while {System.out.printf("Palabra reservada %s en linea %d columna %d \n", yytext(), yyline, yycolumn);}
+while {
+  //System.out.printf("Palabra reservada %s en linea %d columna %d \n", yytext(), yyline, yycolumn);
+  tokens.add(new Token(yytext(), yyline, yycolumn));
+}
 
-. {System.out.println("Cualquier otra");}
+. {}
