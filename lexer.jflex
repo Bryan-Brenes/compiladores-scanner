@@ -70,7 +70,7 @@ var |
 view |
 while {
   //System.out.printf("Palabra reservada %s en linea %d columna %d \n", yytext(), yyline, yycolumn);
-  tokens.add(new Token(yytext(), yyline, yycolumn));
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Parabra reservada"));
 }
 
 . {}
