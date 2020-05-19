@@ -6,6 +6,21 @@ contract Ballot {
         bool voted;  // if true, that person already voted
         address delegate; // person delegated to
         uint vote;   // index of the voted proposal
+        int8;
+        int256;
+        int23;
+        int 8;
+        uint8;
+        uint256;
+        uint23;
+        uint 8;
+        bytes;
+        bytes1;
+        bytes2;
+        bytes32;
+        bytes33;
+        byts21;
+        bytes12;
     }
 
     struct Proposal {

@@ -25,6 +25,11 @@ numeros=[0-9]
 %%
 
 /** 
+ * Comentarios
+ */
+
+
+/** 
   * Palabras reservadas
   */
 
@@ -33,7 +38,7 @@ as |
 bool |
 break |
 byte |
-bytes |
+bytes([1-9]|([1-2][0-9])|(3[0-2]))? |
 constructor |
 continue |
 contract |
@@ -48,7 +53,7 @@ function |
 hex |
 if |
 import |
-int |
+int(8|16|32|64|128|256)? |
 internal |
 mapping |
 modifier |
@@ -65,7 +70,7 @@ struct |
 this |
 true |
 ufixed |
-uint |
+uint(8|16|32|64|128|256)? |
 var |
 view |
 while {
