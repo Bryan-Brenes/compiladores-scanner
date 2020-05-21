@@ -8,11 +8,12 @@ import java.util.ArrayList;
 /**
   * Definicion de macros
  */
-Whitespace=[\t\n]
+Whitespace=[ \t\n]
 numeros=[0-9]
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
+  public static ArrayList<Token> errores = new ArrayList<>();  
 %}
 
 %eofval{
@@ -38,7 +39,7 @@ as |
 bool |
 break |
 byte |
-bytes([1-9]|([1-2][0-9])|(3[0-2]))? |
+bytes([1-9]|([1-2][0-9])|(3[0-2]))?({Whitespace}){1} |
 constructor |
 continue |
 contract |
@@ -75,7 +76,7 @@ var |
 view |
 while {
   //System.out.printf("Palabra reservada %s en linea %d columna %d \n", yytext(), yyline, yycolumn);
-  tokens.add(new Token(yytext(), yyline, yycolumn, "Parabra reservada"));
+  tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Parabra reservada"));
 }
 
 . {}
