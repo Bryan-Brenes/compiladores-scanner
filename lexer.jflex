@@ -8,7 +8,7 @@ import java.util.ArrayList;
 /**
   * Definicion de macros
  */
-Whitespace=[ \t\n]
+Whitespace=[ \t\n\r]
 numeros=[0-9]
 
 %{
@@ -26,6 +26,12 @@ numeros=[0-9]
 %%
 
 /** 
+  * Espacios en blanco
+  */
+
+{Whitespace} {/* Ignorar */}
+
+/** 
  * Comentarios
  */
 
@@ -39,7 +45,7 @@ as |
 bool |
 break |
 byte |
-bytes([1-9]|([1-2][0-9])|(3[0-2]))?({Whitespace}){1} |
+bytes((3[0-2])|([1-2][0-9])|[1-9])? |
 constructor |
 continue |
 contract |
@@ -54,13 +60,12 @@ function |
 hex |
 if |
 import |
-int(8|16|32|64|128|256)? |
+int(256|128|64|32|16|8)? |
 internal |
 mapping |
 modifier |
 payable |
 pragma |
-Pragma |
 private |
 public |
 return |
@@ -71,12 +76,25 @@ struct |
 this |
 true |
 ufixed |
-uint(8|16|32|64|128|256)? |
+uint(256|128|64|32|16|8)? |
 var |
 view |
 while {
   //System.out.printf("Palabra reservada %s en linea %d columna %d \n", yytext(), yyline, yycolumn);
   tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Parabra reservada"));
+}
+
+/**
+  * TRANSAC 
+ */ 
+
+balance |
+call | 
+callcode |
+delegatecall |
+send |
+transfer {
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Transac"));
 }
 
 . {}

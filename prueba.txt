@@ -29,3 +29,6 @@ contract Ballot {
         uint voteCount; // number of accumulated votes
     }
 
+    balance call callcode delegatecall send transfer
+    balance222balance
+
