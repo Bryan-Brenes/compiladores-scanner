@@ -1,5 +1,23 @@
 pragma solidity >=0.4.22 <0.6.0;
 
+hola 
+days
+days
+days 
+ether
+finney
+hours
+minutes
+seconds
+szabo
+weeks
+wei
+years
+123
+
+
+
+
 contract Ballot {
     struct Voter {
         uint weight; // weight is accumulated by delegation
@@ -30,5 +48,8 @@ contract Ballot {
     }
 
     balance call callcode delegatecall send transfer
-    balance222balance
 
+
+// hola mundo
+
+    balance222balanceee

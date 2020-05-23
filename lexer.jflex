@@ -9,7 +9,8 @@ import java.util.ArrayList;
   * Definicion de macros
  */
 Whitespace=[ \t\n\r]
-numeros=[0-9]
+letras=[a-zA-Z_]+
+numeros=[0-9]+
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -34,6 +35,10 @@ numeros=[0-9]
 /** 
  * Comentarios
  */
+"//".* {/*Ignore*/}
+
+
+
 
 
 /** 
@@ -84,6 +89,8 @@ while {
   tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Parabra reservada"));
 }
 
+
+
 /**
   * TRANSAC 
  */ 
@@ -96,5 +103,42 @@ send |
 transfer {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Transac"));
 }
+
+
+/**
+  * UNITS
+ */ 
+days |
+ether | 
+finney |
+hours |
+minutes |
+seconds |
+szabo|
+weeks|
+wei|
+years
+{
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Units"));
+}
+
+
+/**
+  * IDENTIFICADORES 
+ */ 
+{letras} ({letras}|{numeros})* {tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));}
+
+
+
+/**
+  * OPERADORES
+ */ 
+"!" |"&&"|"^" |"=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
+"~" |"+" |"-" |"*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |";"|"."|
+"(" |")"|"["|"]" |"?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
+{tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
+
+
+
 
 . {}
