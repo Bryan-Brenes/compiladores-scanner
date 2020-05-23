@@ -9,7 +9,7 @@ import java.util.ArrayList;
   * Definicion de macros
  */
 Whitespace=[ \t\n\r]
-numeros=[0-9]
+numeros=[0-9]+ | ([0-9.]+) | ([.0-9]+)
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -97,4 +97,8 @@ transfer {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Transac"));
 }
 
+/***************Literales****************/
+{numeros} | "e" {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal"));}
+/***************Operadores***************/
+"-" | "+" {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 . {}
