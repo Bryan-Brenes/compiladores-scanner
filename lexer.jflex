@@ -10,9 +10,9 @@ import java.util.ArrayList;
  */
 Whitespace=[ \t\n\r]
 numeros=[0-9]+ | ([0-9.]+) | ([.0-9]+)
-cadenas=[a-zA-z]+
-hexad=[A-F0-9]+
-cEscape=[\n\xNN\uNNNN\xNN]
+numerosH=[0-9]+
+letrasH=[A-F]+
+cEscape=[\n,\xNN,\uNNNN,\xNN]
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -37,7 +37,6 @@ cEscape=[\n\xNN\uNNNN\xNN]
 /** 
  * Comentarios
  */
-
 
 /** 
   * Palabras reservadas
@@ -101,10 +100,10 @@ transfer {
 }
 
 /***************Literales****************/
-{numeros} | "e"                                   {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
-\"({cadenas} | {Whitespace} | {cEscape})+\" |
-\'({cadenas} | {Whitespace} | {cEscape})+\'       {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal String"));}
-hex | \"{hexad}\"                                 {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
+{numeros}*"e"*{numeros}                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
+\"({numerosH} | {letrasH})*\"    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
+\"(.* | {cEscape})+\" | \'(.* | {cEscape})\'    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal String"));}
 /***************Operadores***************/
 "-" | "+" {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
+
 . {}
