@@ -10,6 +10,9 @@ import java.util.ArrayList;
  */
 Whitespace=[ \t\n\r]
 numeros=[0-9]+ | ([0-9.]+) | ([.0-9]+)
+cadenas=[a-zA-z]+
+hexad=[A-F0-9]+
+cEscape=[\n\xNN\uNNNN\xNN]
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -98,7 +101,10 @@ transfer {
 }
 
 /***************Literales****************/
-{numeros} | "e" {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal"));}
+{numeros} | "e"                                   {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
+\"({cadenas} | {Whitespace} | {cEscape})+\" |
+\'({cadenas} | {Whitespace} | {cEscape})+\'       {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal String"));}
+hex | \"{hexad}\"                                 {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
 /***************Operadores***************/
 "-" | "+" {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 . {}
