@@ -14,7 +14,7 @@ numerosH=[0-9]+
 letrasH=[A-F]+
 cEscape=[\n,\xNN,\uNNNN,\xNN]
 letras=[a-zA-Z_]+
-simbolos=[|°!¡#$%&/=(){}[]?¿<>@·~\^_;.:,]
+simbolos=[|°!¡#$%&/=(){}[]?¿<>@·~\^_;.:,\"\`]
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -23,6 +23,11 @@ simbolos=[|°!¡#$%&/=(){}[]?¿<>@·~\^_;.:,]
 
 %eofval{
   for(Token t: tokens){
+    t.print();
+  }
+
+  System.out.println("\nErrores\n");
+  for(Token t: errores){
     t.print();
   }
   return 0;
@@ -40,17 +45,19 @@ simbolos=[|°!¡#$%&/=(){}[]?¿<>@·~\^_;.:,]
  * Comentarios
  * 
  */
-"//"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})*(\r|\n|\r\n) {/*Ignore*/}
+"//"([ ]* | {numeros} | {simbolos} | {letras} )*(\n) {/*Ignore*/}
 
 /**
   * Comentarios de bloque
   */
+
 "/*"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})*(\r|\n|\r\n)* ( "*/" ) {/*Ignore*/}
 
 /**
   * Literales hexadecimales
   */
-(hex\"({numerosH}|{letrasH})+\")    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
+
+hex\"({numerosH}|{letrasH})+\"    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
 
 /** 
   * Palabras reservadas
@@ -132,9 +139,9 @@ years
 
 /**
   * Literales
- * 
  */
-{numeros}+e(-)?{numeros}+                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
+{numeros}+( e- | e )?{numerosH}+                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
+{numeros}+      {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
 \"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})+\" | \'( {Whitespace} |{numeros} | {simbolos} | {letras} | {cEscape})\'    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal String"));}
 
 
@@ -151,4 +158,4 @@ years
 "(" |")"|"["|"]" |"?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
 {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 
-. {}
+. {errores.add(new Token(yytext(), yyline, yycolumn, "Error"));}
