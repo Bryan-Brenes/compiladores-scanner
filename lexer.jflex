@@ -32,7 +32,11 @@ import java.util.ArrayList;
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
+numbersH       = [0-9]+
+lettersH       = [A-F]+
+numberN        = [0-9]+ | "."([0-9]+)
 
+/*************************************************************************************/
 /* comments */
 Comment = {TraditionalComment} | {EndOfLineComment} | {DocumentationComment}
 
@@ -41,37 +45,61 @@ TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
 EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}?
 DocumentationComment = "/**" {CommentContent} "*"+ "/"
 CommentContent       = ( [^*] | \*+ [^/*] )*
+/*************************************************************************************/
 
 Identifier = [:jletter:] [:jletterdigit:]*
 
 DecIntegerLiteral = 0 | [1-9][0-9]*
 
 %state STRING
+%state hexaState
+%state numberState
+%state NaturalNumbers
+%state Chars
 
 %%
 
 /* keywords */
 <YYINITIAL> "address" | "as" | "bool" | "break" | "byte" | "bytes"((3[0-2])|([1-2][0-9])|[1-9])? |
-"constructor" | "continue" | "contract" | "delete" | "do" | "else" | "enum" | "false" | "for" | "hex" | "from" | "function" |
+"constructor" | "continue" | "contract" | "delete" | "do" | "else" | "enum" | "false" | "for" | "from" | "function" |
 "if" | "import" | "int"(256|128|64|32|16|8)? | "internal" | "mapping" | "modifier" | "payable" | "pragma" | "private" |
 "public" | "return" | "returns" | "solidity" | "string" | "struct" | "this" | "true" | "ufixed" | "uint"(256|128|64|32|16|8)? |
-"var" | "view" | "while" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Parabra reservada"));}
+"var" | "view" | "while" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
 
-<YYINITIAL> "boolean"            { tokens.add(new Token(yytext(), yyline, yycolumn, "Palabra reservada"));}
-<YYINITIAL> "break"              { tokens.add(new Token(yytext(), yyline, yycolumn, "Palabra reservada"));}
+/**
+  * TRANSAC 
+ */ 
+<YYINITIAL> "balance" | "call"| "callcode" | "delegatecall" | "send" | "transfer"
+{ tokens.add(new Token(yytext(), yyline, yycolumn, "Transac")); }
+
+/**
+  * UNITS
+ */
+<YYINITIAL> "days" | "ether" | "finney" | "hours" | "minutes" | "seconds" | "szabo" | "weeks"| "wei"| "years"
+{ tokens.add(new Token(yytext(), yyline, yycolumn, "Units")); }
+
+<YYINITIAL> "hex"\" { string.setLength(0); 
+                      string.append(yytext());
+                      yybegin(hexaState);}
 
 <YYINITIAL> {
     /* identifiers */
     {Identifier}                   { tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));}
 
     /* literals */
-    {DecIntegerLiteral}            { tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
-    \"                             { string.setLength(0); yybegin(STRING); }
+    {numberN}                      {
+                                    string.setLength(0);
+                                    string.append(yytext());
+                                    yybegin(numberState);
+                                   }
+
+    \"                             { string.setLength(0); yybegin(STRING);}
+    \'                             { string.setLength(0); yybegin(Chars);}
 
     /* operators */
-    "="                            { tokens.add(new Token(yytext(), yyline, yycolumn, "Operador igual"));}
-    "=="                           { tokens.add(new Token(yytext(), yyline, yycolumn, "Operador igual igual"));}
-    "+"                            { tokens.add(new Token(yytext(), yyline, yycolumn, "Operador suma"));}
+    "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
+    "~" | "+" |"-" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
+    "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="           {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 
     /* comments */
     {Comment}                      { /* ignore */ }
@@ -81,12 +109,50 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 }
 
 <STRING> {
-    \"                             {
+    \"                            {
+                                   yybegin(YYINITIAL);
+                                   tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal string"));
+                                  }
+    [^\n\r\"\'\\]+                  { string.append( yytext() ); }
+    {Identifier}                  { string.append( yytext() ); }
+}
+
+<Chars> {
+    \'                            {
+                                   yybegin(YYINITIAL);
+                                   tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal char"));
+                                  }
+    [^\n\r\"\'\\]+                  { string.append( yytext() ); }
+    {Identifier}                  { string.append( yytext() ); }
+}
+
+<hexaState> {
+    \"                            { yybegin(YYINITIAL);
+                                    string.append( yytext() ); 
+                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal hexadecimal/Palabra Reservada")); }
+    {lettersH}                    { string.append( yytext() ); }
+    {numbersH}                    { string.append( yytext() ); }
+}
+
+<numberState> {
+    {WhiteSpace} | ";"            {
                                     yybegin(YYINITIAL);
-                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal string"));
-                                   }
-    [^\n\r\"\\]+                   { string.append( yytext() ); }
-    {Identifier}                   { string.append( yytext() ); }
+                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+                                  }
+    {numbersH}                    { string.append(yytext());}
+    "."                           { string.append(yytext());}
+    "e"                           { yybegin(NaturalNumbers);
+                                    string.append(yytext());}
+
+}
+
+<NaturalNumbers> {
+    {WhiteSpace} | ";"            {
+                                    yybegin(YYINITIAL);
+                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+                                  }
+    {numbersH}                    { string.append(yytext());}
+    "-"                           { string.append(yytext());}
 }
 
 /* error fallback */

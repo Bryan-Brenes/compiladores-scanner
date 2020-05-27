@@ -10,3 +10,11 @@ tetas
 break
 bytes
 bytes32
+hex"123FF"
+2.3;
+0.;
+.0;
+2.3e10;
+-2.3e10;
+5e-20;
+-5.6e-8;
