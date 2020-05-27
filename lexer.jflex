@@ -9,8 +9,12 @@ import java.util.ArrayList;
   * Definicion de macros
  */
 Whitespace=[ \t\n\r]
+numeros=[0-9]+ | ([0-9.]+) | ([.0-9]+)
+numerosH=[0-9]+
+letrasH=[A-F]+
+cEscape=[\n,\xNN,\uNNNN,\xNN]
 letras=[a-zA-Z_]+
-numeros=[0-9]+
+simbolos=[|°!¡#$%&/=(){}[]?¿<>@·~\^_;.:,]
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -32,14 +36,15 @@ numeros=[0-9]+
 
 {Whitespace} {/* Ignorar */}
 
-/** 
+/**
  * Comentarios
+ * "//".* {/Ignore/}
  */
-"//".* {/*Ignore*/}
 
-
-
-
+/**
+  * Literales hexadecimales
+  */
+hex\"({numerosH}|{letrasH})+\"    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
 
 /** 
   * Palabras reservadas
@@ -60,9 +65,9 @@ else |
 enum |
 false |
 for |
+hex |
 from |
 function |
-hex |
 if |
 import |
 int(256|128|64|32|16|8)? |
@@ -89,8 +94,6 @@ while {
   tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Parabra reservada"));
 }
 
-
-
 /**
   * TRANSAC 
  */ 
@@ -104,12 +107,11 @@ transfer {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Transac"));
 }
 
-
 /**
   * UNITS
- */ 
+ */
 days |
-ether | 
+ether |
 finney |
 hours |
 minutes |
@@ -122,23 +124,25 @@ years
   tokens.add(new Token(yytext(), yyline, yycolumn, "Units"));
 }
 
+/**
+  * Literales
+ * 
+ */
+{numeros}+e{numeros}+                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
+\"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})+\" | \'( {Whitespace} |{numeros} | {simbolos} | {letras} | {cEscape})\'    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal String"));}
+
 
 /**
-  * IDENTIFICADORES 
- */ 
+  * IDENTIFICADORES
+ */
 {letras} ({letras}|{numeros})* {tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));}
-
-
 
 /**
   * OPERADORES
- */ 
+ */
 "!" |"&&"|"^" |"=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
-"~" |"+" |"-" |"*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |";"|"."|
+"~" |"+" |"-" |"" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
 "(" |")"|"["|"]" |"?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
 {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
-
-
-
 
 . {}
