@@ -45,6 +45,8 @@ TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
 EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}?
 DocumentationComment = "/**" {CommentContent} "*"+ "/"
 CommentContent       = ( [^*] | \*+ [^/*] )*
+
+// fuente: Manual de usuario de JFlex
 /*************************************************************************************/
 
 Identifier = [:jletter:] [:jletterdigit:]*
