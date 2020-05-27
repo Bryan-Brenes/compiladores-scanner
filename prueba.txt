@@ -10,6 +10,10 @@ days = 3;
 2.3e-32
 0.e32
 .3e32
+
+/* Comentario de prueba */
+/* Comentario de prueba
+
 hex"490f";
 
         days 3;

@@ -38,13 +38,19 @@ simbolos=[|°!¡#$%&/=(){}[]?¿<>@·~\^_;.:,]
 
 /**
  * Comentarios
- * "//".* {/Ignore/}
+ * 
  */
+"//"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})*(\r|\n|\r\n) {/*Ignore*/}
+
+/**
+  * Comentarios de bloque
+  */
+"/*"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})*(\r|\n|\r\n)* ( "*/" ) {/*Ignore*/}
 
 /**
   * Literales hexadecimales
   */
-hex\"({numerosH}|{letrasH})+\"    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
+(hex\"({numerosH}|{letrasH})+\")    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
 
 /** 
   * Palabras reservadas
@@ -128,7 +134,7 @@ years
   * Literales
  * 
  */
-{numeros}+e{numeros}+                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
+{numeros}+e(-)?{numeros}+                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
 \"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})+\" | \'( {Whitespace} |{numeros} | {simbolos} | {letras} | {cEscape})\'    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal String"));}
 
 
