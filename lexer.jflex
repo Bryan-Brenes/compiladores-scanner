@@ -35,6 +35,9 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 numbersH       = [0-9]+
 lettersH       = [A-F]+
 numberN        = [0-9]+ | "."([0-9]+)
+simbolos       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
+                 "~" | "+" |"-" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|
+                 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" 
 
 /*************************************************************************************/
 /* comments */
@@ -137,7 +140,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 }
 
 <numberState> {
-    {WhiteSpace} | ";"            {
+    {WhiteSpace} | {simbolos}     {
                                     yybegin(YYINITIAL);
                                     tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
                                   }
@@ -149,7 +152,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 }
 
 <NaturalNumbers> {
-    {WhiteSpace} | ";"            {
+    {WhiteSpace} | {simbolos}     {
                                     yybegin(YYINITIAL);
                                     tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
                                   }
@@ -158,4 +161,8 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 }
 
 /* error fallback */
-[^]                              { throw new Error("Illegal character <"+ yytext()+">"); }
+[^]                              { 
+                                  System.out.println(yyline);
+                                  System.out.println(yycolumn);
+                                  throw new Error("Illegal character <"+ yytext()+">"); 
+                                 }
