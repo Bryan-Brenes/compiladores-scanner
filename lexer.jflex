@@ -9,7 +9,12 @@ import java.util.ArrayList;
   * Definicion de macros
  */
 Whitespace=[ \t\n\r]
-numeros=[0-9]
+numeros=[0-9]+ | ([0-9.]+) | ([.0-9]+)
+numerosH=[0-9]+
+letrasH=[A-F]+
+cEscape=[\n,\xNN,\uNNNN,\xNN]
+letras=[a-zA-Z_]+
+simbolos=[|°!¡#$%&/=(){}[]?¿<>@·~\^_;.:,]
 
 %{
   public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -31,10 +36,15 @@ numeros=[0-9]
 
 {Whitespace} {/* Ignorar */}
 
-/** 
+/**
  * Comentarios
+ * "//".* {/Ignore/}
  */
 
+/**
+  * Literales hexadecimales
+  */
+hex\"({numerosH}|{letrasH})+\"    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal Hexadecimal"));}
 
 /** 
   * Palabras reservadas
@@ -55,9 +65,9 @@ else |
 enum |
 false |
 for |
+hex |
 from |
 function |
-hex |
 if |
 import |
 int(256|128|64|32|16|8)? |
@@ -96,5 +106,43 @@ send |
 transfer {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Transac"));
 }
+
+/**
+  * UNITS
+ */
+days |
+ether |
+finney |
+hours |
+minutes |
+seconds |
+szabo|
+weeks|
+wei|
+years
+{
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Units"));
+}
+
+/**
+  * Literales
+ * 
+ */
+{numeros}+e{numeros}+                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal numerico"));}
+\"({Whitespace} | {numeros} | {simbolos} | {letras} | {cEscape})+\" | \'( {Whitespace} |{numeros} | {simbolos} | {letras} | {cEscape})\'    {tokens.add(new Token(yytext(), yyline, yycolumn, "Literal String"));}
+
+
+/**
+  * IDENTIFICADORES
+ */
+{letras} ({letras}|{numeros})* {tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));}
+
+/**
+  * OPERADORES
+ */
+"!" |"&&"|"^" |"=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
+"~" |"+" |"-" |"" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
+"(" |")"|"["|"]" |"?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
+{tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 
 . {}
