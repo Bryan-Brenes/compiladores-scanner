@@ -13,6 +13,8 @@ import java.util.ArrayList;
 
 %{
     StringBuffer string = new StringBuffer();
+    public static int errorLine = -1;
+    public static int errorColumn = -1;
     public static ArrayList<Token> tokens = new ArrayList<>();  
     public static ArrayList<Token> errores = new ArrayList<>();  
 %}
@@ -47,20 +49,20 @@ TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
 // Comment can be the last line of the file, without line terminator.
 EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}?
 DocumentationComment = "/**" {CommentContent} "*"+ "/"
-CommentContent       = ( [^*] | \*+ [^/*] )*
+CommentContent       = \* \** [^/*]*
 
 // fuente: Manual de usuario de JFlex
 /*************************************************************************************/
 
 Identifier = [:jletter:] [:jletterdigit:]*
 
-DecIntegerLiteral = 0 | [1-9][0-9]*
-
 %state STRING
 %state hexaState
 %state numberState
 %state NaturalNumbers
 %state Chars
+%state Comments
+%state lineComment
 
 %%
 
@@ -107,7 +109,12 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
     "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="           {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 
     /* comments */
-    {Comment}                      { /* ignore */ }
+    "/*"                          {
+                                    errorLine = -1;
+                                    errorColumn = -1; 
+                                    yybegin(Comments);
+                                   }
+    "//"                           { yybegin(lineComment); }
 
     /* whitespace */
     {WhiteSpace}                   { /* ignore */ }
@@ -160,9 +167,39 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
     "-"                           { string.append(yytext());}
 }
 
+<Comments> {
+    "*/"                          { 
+                                    if(errorLine != -1){
+                                      errores.add(new Token("*", errorLine, errorColumn, "Error: linea sin * <comentario bloque>"));
+                                    }
+                                    yybegin(YYINITIAL);
+                                  }
+
+    \*{InputCharacter}*{LineTerminator}         { }
+    {InputCharacter}*{LineTerminator}                            { 
+                                                                  if(errorLine == -1){
+                                                                    errorLine = yyline;
+                                                                    errorColumn = yycolumn;
+                                                                  }
+                                                                }
+    // <<EOF>>                       { errores.add(new Token("/**", yyline, yycolumn, "Error: llave comentario abierta")); }
+}
+
+<lineComment> {
+    {LineTerminator}              { yybegin(YYINITIAL); }
+    .*                            { }  
+}
+
 /* error fallback */
 [^]                              { 
                                   System.out.println(yyline);
                                   System.out.println(yycolumn);
                                   throw new Error("Illegal character <"+ yytext()+">"); 
                                  }
+
+
+/*
+*
+asda
+
+*/
