@@ -182,7 +182,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
                                                                     errorColumn = yycolumn;
                                                                   }
                                                                 }
-    // <<EOF>>                       { errores.add(new Token("/**", yyline, yycolumn, "Error: llave comentario abierta")); }
+    <<EOF>>                       { errores.add(new Token("/**", yyline, yycolumn, "Error: llave comentario abierta")); }
 }
 
 <lineComment> {
