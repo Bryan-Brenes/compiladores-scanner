@@ -4,5 +4,4 @@ pragma solidity >=0.4.22 <0.6.0;
 // of the winner contained in the proposals array and then
 // returns the name of the winner
 
-"hola 
-Mundo';
+hex'20f ;
