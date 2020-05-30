@@ -125,8 +125,12 @@ Identifier = [:jletter:] [:jletterdigit:]*
                                    yybegin(YYINITIAL);
                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal string"));
                                   }
-    [^\n\r\"\'\\]+                  { string.append( yytext() ); }
+    [^\"\\]+                      { string.append( yytext() ); }
     {Identifier}                  { string.append( yytext() ); }
+    "\\n"                         { string.append( yytext() ); }
+    "\\xNN"                       { string.append( yytext() ); }
+    "\\uNNNN"                     { string.append( yytext() ); }
+    // "\'"                          {  }
 }
 
 <Chars> {
