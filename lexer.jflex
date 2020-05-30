@@ -128,15 +128,21 @@ Identifier = [:jletter:] [:jletterdigit:]*
                                    yybegin(YYINITIAL);
                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal string"));
                                   }
-    \'                            { errores.add(new Token("Comilla", yyline, yycolumn, "Error: cierre de comilla incorrecto")); }
+    \'                            { 
+                                    errores.add(new Token("Comilla", yyline, yycolumn, "Error: cierre de comilla incorrecto"));
+                                    yybegin(YYINITIAL);
+                                  }
     {LineTerminator}              { 
                                     errores.add(new Token("Salto linea", yyline, yycolumn, "Error: strings deben ir en la misma linea"));
                                     yybegin(stringError);
                                   }
-    [^\"\'\n\r]+                  { string.append( yytext() ); }
     "\\""n"                       { string.append( yytext() ); }
     "\\xNN"                       { string.append( yytext() ); }
     "\\uNNNN"                     { string.append( yytext() ); }
+    [^\"\'\n\r]+                  { 
+                                    string.append( yytext() ); 
+                                    System.out.println("Aqui");
+                                  }
 }
 
 <Chars> {
@@ -144,22 +150,21 @@ Identifier = [:jletter:] [:jletterdigit:]*
                                    yybegin(YYINITIAL);
                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal char"));
                                   }
-    \"                            { errores.add(new Token("Comilla", yyline, yycolumn, "Error: cierre de comilla incorrecto")); }
+    \"                            { 
+                                    errores.add(new Token("Comilla", yyline, yycolumn, "Error: cierre de comilla incorrecto")); 
+                                    yybegin(YYINITIAL);
+                                  }
     {LineTerminator}              { 
                                     errores.add(new Token("Salto linea", yyline, yycolumn, "Error: chars deben ir en la misma linea"));
                                     yybegin(charError);
                                   }
-    [^\"\'\n\r]+                    { string.append( yytext() ); }
+    [^\"\'\n\r]+                  { 
+                                    string.append( yytext() ); 
+                                    System.out.println("Aqui");
+                                  }
     "\\n"                         { string.append( yytext() ); }
     "\\xNN"                       { string.append( yytext() ); }
     "\\uNNNN"                     { string.append( yytext() ); }
-}
-
-<charError> {
-    \'                            {
-                                    yybegin(YYINITIAL);
-                                  }
-    [^\"]+                        { }
 }
 
 <hexaState> {
@@ -239,7 +244,20 @@ Identifier = [:jletter:] [:jletterdigit:]*
     \"                            {
                                     yybegin(YYINITIAL);
                                   }
-    [^\"]+                        { }
+    \'                            {
+                                    yybegin(YYINITIAL);
+                                  }
+    [^\"\']+                        { }
+}
+
+<charError> {
+    \'                            {
+                                    yybegin(YYINITIAL);
+                                  }
+    \"                            {
+                                    yybegin(YYINITIAL);
+                                  }
+    [^\"\']+                        { }
 }
 
 /* error fallback */
