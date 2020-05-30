@@ -70,6 +70,9 @@ Identifier = [:jletter:] [:jletterdigit:]*
 %state OperadoresState
 %%
 
+
+
+<YYINITIAL> {simbolos} {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 /* keywords */
 <YYINITIAL> "address" | "as" | "bool" | "break" | "byte" | "bytes"((3[0-2])|([1-2][0-9])|[1-9])? |
 "constructor" | "continue" | "contract" | "delete" | "do" | "else" | "enum" | "false" | "for" | "from" | "function" |
@@ -125,7 +128,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
     \'                             { string.setLength(0); yybegin(Chars);}
 
     /* operators */
-    {simbolos}                     {string.setLength(0); yybegin(OperadoresState);}     
+    //{simbolos}                     {string.setLength(0); yybegin(OperadoresState);}     
                              
 
     /* comments */
@@ -257,12 +260,12 @@ Identifier = [:jletter:] [:jletterdigit:]*
 /////////////////////////////////////////////////////////////////////////////
 
 
-<OperadoresState> {
-     {simbolos} {
-                  {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
-                   yybegin(YYINITIAL);
-                  }
-}
+// <OperadoresState> {
+//      {simbolos} {
+//                   {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
+//                    yybegin(YYINITIAL);
+//                   }
+// }
 
 
 
