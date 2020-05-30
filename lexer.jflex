@@ -110,6 +110,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
 <YYINITIAL> {
 
 ///////////////////////////////JM////////////////////////////////////////////
+    ( "-"* ("0")+ {numbersH} ) *               {tokens.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
     ( (".." | "...")+ "-"* {numberN})    { tokens.add(new Token(yytext(), yyline, yycolumn, "Error decimal"));}
     /* identifiers */
     ({Identifier}|{simbolos})      { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
