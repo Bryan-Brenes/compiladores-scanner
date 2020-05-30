@@ -13,7 +13,6 @@ import java.util.ArrayList;
 
 %{
     StringBuffer string = new StringBuffer();
-    public static int errorIdentifier = -1;
     public static int errorLine = -1;
     public static int errorColumn = -1;
     public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -57,6 +56,7 @@ CommentContent       = \* \** [^/*]*
 
 Identifier = [:jletter:] [:jletterdigit:]*
 
+
 %state STRING
 %state hexaState
 %state numberState
@@ -64,8 +64,8 @@ Identifier = [:jletter:] [:jletterdigit:]*
 %state Chars
 %state Comments
 %state lineComment
+%state indetifierState
 %state indetifierError
-
 %%
 
 /* keywords */
@@ -91,15 +91,27 @@ Identifier = [:jletter:] [:jletterdigit:]*
                       string.append(yytext());
                       yybegin(hexaState);}
 
+
+ /////////////////////////////////////////////////////////////////////////////
+///////////////////////////////JM////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+//<YYINITIAL>(identifiers | simbolos | numbersN)*  { System.out.println("picha"); string.append(yytext()); yybegin(indetifierState);}
+//<YYINITIAL>(numberN|simbolos)*       { string.append(yytext()); yybegin(indetifierError);}// simbolo o numero 
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+                     
+
 <YYINITIAL> {
 
 
-   ///////////////////////////////JM
-   ({numberN}|{simbolos}){Identifier}*        { string.append(yytext()); yybegin(indetifierError);}// simbolo o numero 
-    
+ /////////////////////////////////////////////////////////////////////////////
+///////////////////////////////JM////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
     /* identifiers */
-    {Identifier}                   { tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));}
-
+    ({Identifier}|whitespace| {simbolos})      {string.append(yytext()); yybegin(indetifierState);}
+    ({numberN}{Identifier})*         {string.append(yytext()); yybegin(indetifierError);}
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
     /* literals */
     {numberN}                      {
@@ -110,7 +122,6 @@ Identifier = [:jletter:] [:jletterdigit:]*
 
     \"                             { string.setLength(0); yybegin(STRING);}
     \'                             { string.setLength(0); yybegin(Chars);}
-   
 
     /* operators */
     "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
@@ -205,15 +216,40 @@ Identifier = [:jletter:] [:jletterdigit:]*
 
 
 
-/////////////////////////////////////////////////////////////////jm
+
+
+/////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////JM////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 <indetifierError> {
      \n  {
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
                    yybegin(YYINITIAL);
+                   string.setLength(0);
                   }
-    .*           {string.append(yytext());}
+    [^]           {string.append(yytext());}
 }
-/////////////////////////////////////////////////////////////////jm
+
+
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+<indetifierState> {
+  
+     \n  {
+                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
+                   yybegin(YYINITIAL);
+                   string.setLength(0);
+                  }
+    //{simbolos}   {string.append(yytext()); yybegin(indetifierError);}
+    {simbolos}   {string.append(yytext()); yybegin(indetifierError);}
+    [^]             {string.append(yytext());}
+  
+}
+
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 /* error fallback */
 [^]                              { 
@@ -226,5 +262,18 @@ Identifier = [:jletter:] [:jletterdigit:]*
 /*
 *
 asda
-
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
