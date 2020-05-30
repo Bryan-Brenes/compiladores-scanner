@@ -108,8 +108,10 @@ Identifier = [:jletter:] [:jletterdigit:]*
 ///////////////////////////////JM////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
     /* identifiers */
-    ({Identifier}|whitespace| {simbolos})      {string.append(yytext()); yybegin(indetifierState);}
-    ({numberN}{Identifier})*         {string.append(yytext()); yybegin(indetifierError);}
+    ({Identifier}|{simbolos})      {string.append(yytext()); yybegin(indetifierState);}
+    ({numberN}{Identifier})         {string.append(yytext()); yybegin(indetifierError);}
+    (  ({numbersH} (".."|"...")+ "-"* {numbersH}("."|"..")*) | ( {numbersH} ("."|"..")* {simbolos} ("."|"..")* {numbersH}("."|"..")*) | ( {numbersH} ("."|"..")* {simbolos} ("."|"..")*("-")*{numbersH}("."|"..")*)  ) 
+                 { tokens.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
@@ -230,7 +232,6 @@ Identifier = [:jletter:] [:jletterdigit:]*
     [^]           {string.append(yytext());}
 }
 
-
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 <indetifierState> {
@@ -245,7 +246,6 @@ Identifier = [:jletter:] [:jletterdigit:]*
     [^]             {string.append(yytext());}
   
 }
-
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
