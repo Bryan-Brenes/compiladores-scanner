@@ -38,7 +38,7 @@ numbersH       = [0-9]+
 lettersH       = [A-F]+
 numberN        = [0-9]+ | "."([0-9]+)
 simbolos       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
-                 "~" | "+" |"-" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|
+                 "~" | "+" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," | ";" |
                  "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" 
 
 /*************************************************************************************/
@@ -63,6 +63,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
 %state Chars
 %state Comments
 %state lineComment
+%state errorNumeros
 
 %%
 
@@ -150,16 +151,25 @@ Identifier = [:jletter:] [:jletterdigit:]*
     {numbersH}                    { string.append( yytext() ); }
 }
 
+
 <numberState> {
-    {WhiteSpace} | {simbolos}     {
+    {WhiteSpace}                  {
                                     yybegin(YYINITIAL);
                                     tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+                                  }
+    {simbolos}                    {
+                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+                                    tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+                                    yybegin(YYINITIAL);
                                   }
     {numbersH}                    { string.append(yytext());}
     "."                           { string.append(yytext());}
     "e"                           { yybegin(NaturalNumbers);
                                     string.append(yytext());}
-
+    [^]                           {
+                                    string.append(yytext());
+                                    yybegin(errorNumeros);
+                                  }
 }
 
 <NaturalNumbers> {
@@ -169,6 +179,10 @@ Identifier = [:jletter:] [:jletterdigit:]*
                                   }
     {numbersH}                    { string.append(yytext());}
     "-"                           { string.append(yytext());}
+    [^]                           {
+                                    string.append(yytext());
+                                    yybegin(errorNumeros);
+                                  }
 }
 
 <Comments> {
@@ -194,13 +208,20 @@ Identifier = [:jletter:] [:jletterdigit:]*
     .*                            { }  
 }
 
+<errorNumeros> {
+  {WhiteSpace}                    {
+                                    yybegin(YYINITIAL);
+                                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error: numero mal formado"));
+                                  }
+  [^]                             {string.append(yytext());} 
+}
+
 /* error fallback */
 [^]                              { 
                                   System.out.println(yyline);
                                   System.out.println(yycolumn);
                                   throw new Error("Illegal character <"+ yytext()+">"); 
                                  }
-
 
 /*
 *
