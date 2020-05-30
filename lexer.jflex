@@ -240,7 +240,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
                    yybegin(YYINITIAL);
                    string.setLength(0);
                   }
-    //{simbolos}   {string.append(yytext()); yybegin(indetifierError);}
+    \             {string.append(yytext()); yybegin(indetifierError);}
     {simbolos}   {string.append(yytext()); yybegin(indetifierError);}
     [^]             {string.append(yytext());}
   
