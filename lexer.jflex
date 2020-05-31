@@ -359,6 +359,11 @@ Identifier = [:jletter:] [:jletterdigit:]*
 /////////////////////////////////////////////////////////
 
 
+
+
+
+/////////////////////////////////////////////////////////
+//------------PONCHO APLICA ERRO
 /////////////////////////////////////////////////////////
 ///------------------[CHECK  SPACE]--------------------//
 /////////////////////////////////////////////////////////
@@ -369,12 +374,15 @@ Identifier = [:jletter:] [:jletterdigit:]*
                    string.setLength(0); string.append(yytext());
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "operador"));
                    yybegin(YYINITIAL);
-                  }   
+                  }
+      \n          {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
+                   yybegin(YYINITIAL);}              
+
+      {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
+      {Identifier}  {string.append(yytext());} 
+      (\ )+          {yybegin(SpaceState);}               
       ("/")+         {yybegin(lineComment); }
-      \n           {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
-                   yybegin(YYINITIAL);}
-                   
-      [^]          {string.append(yytext()); yybegin(indetifierError);}
+      [^]          {}//------------PONCHO LLAMA A ERROR
 }
 /////////////////////////////////////////////////////////
 
