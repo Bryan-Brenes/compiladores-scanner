@@ -37,7 +37,12 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 numbersH       = [0-9]+
 lettersH       = [A-Fa-f]+
 numberN        = [0-9]+ | "."([0-9]+)
+
 simbolos       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
+                 "~" | "+" |"-" | "" |"/" |"%" |""| "<<" |">>"|"="|"," |";"|
+                 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
+
+simbolosB       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
                  "~" | "+" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," | ";" |
                  "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" 
 
@@ -69,8 +74,13 @@ Identifier = [:jletter:] [:jletterdigit:]*
 %state hexaStateC
 %state hexaStateError
 %state hexaStateCError
-
+%state indetifierState
+%state indetifierError
+%state decimalError
+%state OperadoresState
 %%
+
+<YYINITIAL> {simbolos} {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 
 /* keywords */
 <YYINITIAL> "address" | "as" | "bool" | "break" | "byte" | "bytes"((3[0-2])|([1-2][0-9])|[1-9])? |
@@ -102,8 +112,11 @@ Identifier = [:jletter:] [:jletterdigit:]*
 <YYINITIAL> "hex" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
 
 <YYINITIAL> {
+    ( "-"* ("0")+ {numbersH} ) *      { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+    ( (".." | "...")+ "-"* {numberN}) { errores.add(new Token(yytext(), yyline, yycolumn, "Error decimal"));}
     /* identifiers */
-    {Identifier}                   { tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));}
+    ({Identifier}|{simbolos})         { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
+    ({numberN}{Identifier})           { string.setLength(0); string.append(yytext()); yybegin(indetifierError);}
 
     /* literals */
     {numberN}                      {
@@ -114,11 +127,6 @@ Identifier = [:jletter:] [:jletterdigit:]*
 
     \"                             { string.setLength(0); yybegin(STRING);}
     \'                             { string.setLength(0); yybegin(Chars);}
-
-    /* operators */
-    "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
-    "~" | "+" |"-" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
-    "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="           {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
 
     /* comments */
     "/*"                          {
@@ -228,7 +236,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
                                   }
     {lettersH}                    { string.append( yytext() ); }
     {numbersH}                    { string.append( yytext() ); }
-    [^A-Fa-f0-9\;]                  {
+    [^A-Fa-f0-9\;]                {
                                     errores.add(new Token(yytext(), yyline, yycolumn, "Error: Numero no es hexadecimal"));
                                     yybegin(YYINITIAL);
                                   }
@@ -250,7 +258,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
     //                                 yybegin(YYINITIAL);
     //                                 tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
     //                               }
-    {simbolos}                    {
+    {simbolosB}                    {
                                     tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
                                     tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
                                     yybegin(YYINITIAL);
@@ -266,7 +274,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
 }
 
 <NaturalNumbers> {
-    {WhiteSpace} | {simbolos}     {
+    {WhiteSpace} | {simbolosB}     {
                                     yybegin(YYINITIAL);
                                     tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
                                   }
@@ -281,8 +289,8 @@ Identifier = [:jletter:] [:jletterdigit:]*
 <Comments> {
     "*/"                          { 
                                     if(errorLine != -1){
-                                      errores.add(new Token("*", errorLine, errorColumn, "Error: linea sin * <comentario bloque>"));
-                                    }
+                                    errores.add(new Token("*", errorLine, errorColumn, "Error: linea sin * <comentario bloque>"));
+                                  }
                                     yybegin(YYINITIAL);
                                   }
 
@@ -299,6 +307,34 @@ Identifier = [:jletter:] [:jletterdigit:]*
 <lineComment> {
     {LineTerminator}              { yybegin(YYINITIAL); }
     .*                            { }  
+}
+
+<indetifierError> {
+     \n  {
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
+                   yybegin(YYINITIAL);
+                  }
+    [^]           {string.append(yytext());}
+}
+
+<indetifierState> {
+  
+     \n  {
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
+                   yybegin(YYINITIAL);
+                  }
+    \             {string.append(yytext()); yybegin(indetifierError);}
+    {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
+    [^]             {string.append(yytext());}
+  
+}
+
+<decimalError> {
+     \n  {
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
+                   yybegin(YYINITIAL);
+                  }
+    [^]           {string.append(yytext());}
 }
 
 <errorNumeros> {
