@@ -439,13 +439,12 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 /////////////////////////////////////////////////////////
 <indetifierError> {
      (\n|;|"/")  { 
-                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
                    yybegin(YYINITIAL);
                   } 
     // ("/")+         {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
     //                yybegin(YYINITIAL);yybegin(lineComment); } 
-     ("/")+         {yybegin(lineComment); }
-    
+     ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
     {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
     {numberN}     {string.append(yytext());}
     {Identifier}  {string.append(yytext());} 
