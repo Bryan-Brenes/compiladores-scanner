@@ -1,22 +1,13 @@
-pragma solidity >=0.4.0 <0.7.0;
+ pragma solidity >=0.4.0 <0.7.0;
 
+owner; 
+x;
+ 
 contract Coin {
-    struct Bank {
+    struct Bank         {
         address owner;   // no hay error
         uint x;   // no hay error
 		string 12zz;  // Aqui si hay un error porque no puede empezar con numeros  
 		int $aa   //en este caso se espera que $ de un error lexico
     }
 }
- 
-
-
-//  ERRORES DE SIMBOLOS NO CONOCIDOS
-
-    
-
-
-
-
-/** COMENTARIO NO CERRADO
-                DEBE DAR ERROR
