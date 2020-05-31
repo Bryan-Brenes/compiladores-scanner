@@ -80,9 +80,11 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 %state indetifierError
 %state decimalError
 %state OperadoresState
-%state SpaceState
+%state SpaceStateError
+%state SpaceStateDone
 %state selectNumber
 %state selectExtra
+%state selectSemiID
 %%
 /////////////////////////////////////////////////////
 
@@ -163,7 +165,6 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
      //////////////[  IDENTIFICADORES  ]//////////////////
      /////////////////////////////////////////////////////
      ({Identifier}|{simbolos})          { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
-     //({numberN}{Identifier})           { string.setLength(0); string.append(yytext()); yybegin(indetifierError);}
     /////////////////////////////////////////////////////
 
 
@@ -383,6 +384,28 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////
 //------------PONCHO APLICA ERRO
 /////////////////////////////////////////////////////////
@@ -390,17 +413,17 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 /////////////////////////////////////////////////////////
 <indetifierState> {
      (\n)  {
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
+                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador 1.1"));
                    yybegin(YYINITIAL);
                   }
      (;)  {
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
+                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.1"));
                    string.setLength(0); 
                    string.append(yytext());
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "operador"));
+                   tokens.add(new Token(string.toString(), yyline, yycolumn, "operador1.1"));
                    yybegin(YYINITIAL);
                   }
-    (\ )+         {yybegin(SpaceState);}  
+    (\ )+         {yybegin(SpaceStateError);}  
     {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
     {numberN}     {string.append(yytext());}
     {Identifier}  {string.append(yytext());}
@@ -410,29 +433,53 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
 
 
+/////////////////////////////////////////////////////////
+///---------------[ERROR IDENTIFICADOR]----------------//
+/////////////////////////////////////////////////////////
+<indetifierError> {
+  (\n)  { 
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador2.1"));
+                   yybegin(YYINITIAL);
+                  }   
+   ("{"\n| ";"\n)  {
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador2.2"));
+                   string.setLength(0);
+                   string.append(yytext());
+                   string.setLength(1);
+                   tokens.add(new Token(string.toString(), yyline, yycolumn, "operador2.3"));
+                   yybegin(YYINITIAL);
+            } 
+              
+    {simbolos}    {string.append(yytext());}
+    {numberN}     {string.append(yytext());}
+    {Identifier}  {string.append(yytext());} 
+    (\ )+          {yybegin(SpaceStateError);}   
+    [^]          {}//------------PONCHO LLAMA A ERROR              
+}
+/////////////////////////////////////////////////////////
+
+
 
 /////////////////////////////////////////////////////////
-//------------PONCHO APLICA ERRO
-/////////////////////////////////////////////////////////
-///------------------[CHECK  SPACE]--------------------//
+///------------------[SPACE STATE ERROR]---------------//
 /////////////////////////////////////////////////////////
 
-<SpaceState> {
+<SpaceStateDone> {
      ("{"|";")  {  
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
+                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador3.1"));
                    string.setLength(0); 
                    string.append(yytext());
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "operador"));
+                   tokens.add(new Token(string.toString(), yyline, yycolumn, "operador3.2"));
                    yybegin(YYINITIAL);
                   }
-      \n          {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
+      \n          {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador3.3"));
                    yybegin(YYINITIAL);
                    }              
 
       {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
       {numberN}     {string.append(yytext());}
       {Identifier}  {string.append(yytext());} 
-      (\ )+          {yybegin(SpaceState);}               
+      (\ )+          {yybegin(SpaceStateError);}               
      // ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
       [^]          {}//------------PONCHO LLAMA A ERROR
 }
@@ -441,26 +488,34 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
 
 /////////////////////////////////////////////////////////
-//------------ESTOY A PUNTO DE BORRAR ESTO
+///------------------[SPACE STATE ERROR]---------------//
 /////////////////////////////////////////////////////////
-///---------------[ERROR IDENTIFICADOR]----------------//
-/////////////////////////////////////////////////////////
-<indetifierError> {
-     (\n|;|"/")  { 
-                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
+<SpaceStateError> {
+
+     ("{"|";")  { string.setLength(0); 
+                  string.append(yytext());
+                  tokens.add(new Token(string.toString(), yyline, yycolumn, "operador4.1"));
+                  yybegin(SpaceStateError);
+                  }
+
+      \n          {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador4.2"));
                    yybegin(YYINITIAL);
-                  } 
-    // ("/")+         {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
-    //                yybegin(YYINITIAL);yybegin(lineComment); } 
-    // ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
-    {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
-    {numberN}     {string.append(yytext());}
-    {Identifier}  {string.append(yytext());} 
-    (\ )+          {yybegin(SpaceState);}   
-    [^]          {}//------------PONCHO LLAMA A ERROR              
-    //[^]           {string.append(yytext());}
+                   }              
+
+      {simbolos}    {string.append(yytext());yybegin(indetifierError);}
+      {numberN}     {string.append(yytext());yybegin(indetifierError);}
+      {Identifier}  {string.append(yytext()); yybegin(indetifierError);} 
+      (\ )+          {yybegin(SpaceStateError);}               
+     // ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
+      [^]          {}//------------PONCHO LLAMA A ERROR
 }
 /////////////////////////////////////////////////////////
+
+
+
+
+
+
 
 
 
@@ -481,9 +536,12 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 ///------------------[SELECT EXTRA]-------------------//
 /////////////////////////////////////////////////////////
 <selectExtra> {
-     ({Letars}|{simbolos})+ {string.append(yytext());yybegin(indetifierError);}               
+     ({Letars}|{simbolos}*|{numberN}*) {string.append(yytext());yybegin(indetifierError);}               
 }
 /////////////////////////////////////////////////////////
+
+
+
 
 
 /////////////////////////////////////////////////////////
@@ -500,6 +558,29 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
     [^]          {string.append(yytext());}
 }
 /////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

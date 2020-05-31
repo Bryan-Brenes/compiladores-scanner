@@ -1,4 +1,6 @@
--0023
+5jm{
+4jm;
+-0023;
 1.5e-4
 -123e10 
 ab   ab 
@@ -11,7 +13,7 @@ mult*
 1..3
 var1
 ab!
-ab ab 
+ab ab; 
 abstract
 caca
 "Juanma Rico"
