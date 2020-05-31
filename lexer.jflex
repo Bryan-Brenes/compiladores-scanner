@@ -485,6 +485,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 <selectNumber> {
      ({numberN} |"e"|"."|";" )+  {string.append(yytext());yybegin(numberState);}
      \n  {yybegin(numberState);}//PELIGRO COMENTAR
+     {Letars} {string.append(yytext());yybegin(indetifierError);}    
      [^] {string.append(yytext());yybegin(selectExtra);}   
 }
 /////////////////////////////////////////////////////////
