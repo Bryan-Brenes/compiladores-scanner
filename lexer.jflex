@@ -155,7 +155,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
     /////////////////////////////////////////////////////
     //////////////////[  NUMEROS   ]////////////////////
     /////////////////////////////////////////////////////
-    {numberN}                      {string.setLength(0);string.append(yytext());yybegin(numberState);}
+    {numberN}                      {string.setLength(0);string.append(yytext());yybegin(selectNumber);}
     /////////////////////////////////////////////////////
 
     
@@ -163,7 +163,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
      //////////////[  IDENTIFICADORES  ]//////////////////
      /////////////////////////////////////////////////////
      ({Identifier}|{simbolos})          { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
-     ({numberN}{Identifier})           { string.setLength(0); string.append(yytext()); yybegin(indetifierError);}
+     //({numberN}{Identifier})           { string.setLength(0); string.append(yytext()); yybegin(indetifierError);}
     /////////////////////////////////////////////////////
 
 
@@ -433,7 +433,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
       {numberN}     {string.append(yytext());}
       {Identifier}  {string.append(yytext());} 
       (\ )+          {yybegin(SpaceState);}               
-      ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
+     // ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
       [^]          {}//------------PONCHO LLAMA A ERROR
 }
 /////////////////////////////////////////////////////////
@@ -452,7 +452,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                   } 
     // ("/")+         {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
     //                yybegin(YYINITIAL);yybegin(lineComment); } 
-     ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
+    // ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
     {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
     {numberN}     {string.append(yytext());}
     {Identifier}  {string.append(yytext());} 
