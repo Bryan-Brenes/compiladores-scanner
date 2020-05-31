@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 %{
     StringBuffer string = new StringBuffer();
+    public static int flag = 0;
     public static int errorLine = -1;
     public static int errorColumn = -1;
     public static ArrayList<Token> tokens = new ArrayList<>();  
@@ -30,7 +31,7 @@ import java.util.ArrayList;
   }
   return 0;
 %eofval}
-
+Letars         = [a-zA-Z_]+
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
@@ -50,10 +51,6 @@ simbolosB       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
 
 
 /* MACROS */
-
-
-
-
 
 
 // fuente: Manual de usuario de JFlex
@@ -85,6 +82,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 %state OperadoresState
 %state SpaceState
 %state selectNumber
+%state selectExtra
 %%
 /////////////////////////////////////////////////////
 
@@ -148,30 +146,28 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
      /////////////////////////////////////////////////////
      /////////////////[  DECIMALES  ]/////////////////////
      /////////////////////////////////////////////////////
-    ( "-"* ("0")+ {numbersH} )        { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
-    ( (".." | "...")+ "-"* {numberN}) { errores.add(new Token(yytext(), yyline, yycolumn, "Error decimal"));}
+    ( "-"* ("0")+ {numbersH} )        { string.setLength(0); string.append(yytext());errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+    (".")+ { string.setLength(0);string.append(yytext()); yybegin(decimalError);}
     /////////////////////////////////////////////////////
 
+
+
+    /////////////////////////////////////////////////////
+    //////////////////[  NUMEROS   ]////////////////////
+    /////////////////////////////////////////////////////
+    {numberN}                      {string.setLength(0);string.append(yytext());yybegin(numberState);}
+    /////////////////////////////////////////////////////
 
     
      /////////////////////////////////////////////////////
      //////////////[  IDENTIFICADORES  ]//////////////////
      /////////////////////////////////////////////////////
-    ({Identifier}|{simbolos})         { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
+     ({Identifier}|{simbolos})          { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
      ({numberN}{Identifier})           { string.setLength(0); string.append(yytext()); yybegin(indetifierError);}
     /////////////////////////////////////////////////////
 
 
 
-    /////////////////////////////////////////////////////
-    //////////////////[  LITERALES  ]////////////////////
-    /////////////////////////////////////////////////////
-    {numberN}                      {
-                                    string.setLength(0);
-                                    string.append(yytext());
-                                    yybegin(numberState);
-                                   }
-    /////////////////////////////////////////////////////
     
 
 
@@ -329,14 +325,24 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                                     tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
                                     yybegin(YYINITIAL);
                                   }
+
     {numbersH}                    { string.append(yytext());}
+    ("..")+                       { string.append(yytext()) ; yybegin(decimalError);}
     "."                           { string.append(yytext());}
     "e"                           { yybegin(NaturalNumbers);
                                     string.append(yytext());}
+
+     ///////////////////////////////////////////////////////////////////////
+     //{numberN}       {string.append(yytext());yybegin(decimalError);}// si el numero es negativo
+     //{simbolos}    {string.append(yytext());yybegin(decimalError);}// si hay mas de un punto 
+     {Letars}        { } // si encuentra una letra manda a error de identificador  
+    /////////////////////////////////////////////////////////////////////// 
+  
     [^]                           {
                                     string.append(yytext());
                                     yybegin(errorNumeros);///////////////
                                   }
+                                  
 }
 
 <NaturalNumbers> {
@@ -414,12 +420,14 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 <SpaceState> {
      ("{"|";")  {  
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
-                   string.setLength(0); string.append(yytext());
+                   string.setLength(0); 
+                   string.append(yytext());
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "operador"));
                    yybegin(YYINITIAL);
                   }
       \n          {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
-                   yybegin(YYINITIAL);}              
+                   yybegin(YYINITIAL);
+                   }              
 
       {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
       {numberN}     {string.append(yytext());}
@@ -448,7 +456,8 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
     {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
     {numberN}     {string.append(yytext());}
     {Identifier}  {string.append(yytext());} 
-    (\ )+          {yybegin(SpaceState);}                 
+    (\ )+          {yybegin(SpaceState);}   
+    [^]          {}//------------PONCHO LLAMA A ERROR              
     //[^]           {string.append(yytext());}
 }
 /////////////////////////////////////////////////////////
@@ -456,44 +465,41 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
 
 
-
-
-
-/////////////////////////////////////////////////////////
-//------------ESTOY A PUNTO DE BORRAR ESTO
-/////////////////////////////////////////////////////////
-///-----------------[ERROR DECIMAL]--------------------//
-/////////////////////////////////////////////////////////
-<decimalError> {
-     \n  {
-                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
-                   yybegin(YYINITIAL);
-                  }
-    [^]           {string.append(yytext());}
-}
-/////////////////////////////////////////////////////////
-
-
-
 /////////////////////////////////////////////////////////
 ///------------------[SELECT NUMBER]-------------------//
 /////////////////////////////////////////////////////////
 <selectNumber> {
-       \n  {
-                   errores.add(new Token(string.toString(), yyline, yycolumn, "LA PICHA DE LA VACA"));
-                   yybegin(YYINITIAL);
-                  } 
-    {numberN}    {string.append(yytext());}
-    {lettersH}   {string.append(yytext());yybegin(numberState);} 
-    {Identifier} {string.append(yytext());;yybegin(indetifierError);}                    
+     ({numberN} |"e"|"."|";" )+  {string.append(yytext());yybegin(numberState);}
+     \n  {yybegin(numberState);}//PELIGRO COMENTAR
+     [^] {string.append(yytext());yybegin(selectExtra);}   
 }
 /////////////////////////////////////////////////////////
 
 
 
+/////////////////////////////////////////////////////////
+///------------------[SELECT EXTRA]-------------------//
+/////////////////////////////////////////////////////////
+<selectExtra> {
+     ({Letars}|{simbolos})+ {string.append(yytext());yybegin(indetifierError);}               
+}
+/////////////////////////////////////////////////////////
 
 
-
+/////////////////////////////////////////////////////////
+///-----------------[ERROR DECIMAL]--------------------//
+/////////////////////////////////////////////////////////
+<decimalError> {
+    (\n) {errores.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
+                     string.setLength(0); 
+                     yybegin(YYINITIAL);
+                 }
+    {simbolos}    {string.append(yytext());}
+    {numberN}     {string.append(yytext());}
+    {Letars}  {string.append(yytext());} 
+    [^]          {string.append(yytext());}
+}
+/////////////////////////////////////////////////////////
 
 
 
@@ -503,8 +509,8 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 /////////////////////////////////////////////////////////
 <errorNumeros> {
   {WhiteSpace}                    {
+                                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error: numero mal formado")); 
                                     yybegin(YYINITIAL);
-                                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error: numero mal formado"));
                                   }
   [^]                             {string.append(yytext());} 
 }

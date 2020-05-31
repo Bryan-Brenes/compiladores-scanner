@@ -1,21 +1,16 @@
-VARAS////////////////////ME CAGO EN LA PUTA
+-0023
 1.5e-4
 -123e10 
 ab   ab 
 hola&, 
 adios!, 
 mult*
-12zz
 -0023
-0023
-..-1
-1..
+0023 
 1.-3
 1..3
 var1
 ab!
-va!r1
-2abc
 ab ab 
 abstract
 caca
@@ -25,7 +20,6 @@ tetas
 +
 "Checho rico"
 =
-69
 break
 bytes
 bytes32
