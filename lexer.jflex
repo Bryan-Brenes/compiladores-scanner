@@ -157,6 +157,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
      /////////////////////////////////////////////////////
      /////////////////[  DECIMALES  ]/////////////////////
      /////////////////////////////////////////////////////
+    ( "-"*  {numbersH}* + ("..")+  "-"*{numbersH}* )        { string.setLength(0); string.append(yytext());errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
     ( "-"* ("0")+ {numbersH} )        { string.setLength(0); string.append(yytext());errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
     (".")+ { string.setLength(0);string.append(yytext()); yybegin(decimalError);}
     /////////////////////////////////////////////////////
@@ -463,8 +464,8 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador2.1"));
                    yybegin(YYINITIAL);
                   }
-   (";")      {yybegin(plusSimbolF);}
-   ("{")      {yybegin(plusSimbolF1);}  
+   (";"| (\ )+)      {yybegin(plusSimbolF);}
+   ("{"| (\ )+)      {yybegin(plusSimbolF1);}  
    ("{"\n| ";"\n)  {
                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador2.2"));
                    string.setLength(0);
@@ -554,7 +555,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 ///------------------[PLUS FALSE]----------------------//
 /////////////////////////////////////////////////////////
 <plusSimbolF> {
-   (\n| \ )  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+   (\n| \ )  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
                   tokens.add(new Token(";", yyline, yycolumn, "operador1.3.p"));
                   
                   yybegin(YYINITIAL);
@@ -565,10 +566,10 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 /////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////
-///------------------[PLUS TRUE1]----------------------//
+///------------------[PLUS FALSE1]----------------------//
 /////////////////////////////////////////////////////////
 <plusSimbolF1> {
-   (\n| \ )  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+   (\n| \ )  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
                   tokens.add(new Token("{", yyline, yycolumn, "operador1.3.p"));
                   
                   yybegin(YYINITIAL);
