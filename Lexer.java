@@ -1819,7 +1819,7 @@ class Lexer {
       else {
         switch (zzAction < 0 ? zzAction : ZZ_ACTION[zzAction]) {
           case 1:
-            { tokens.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));
+            { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));
             }
             // fall through
           case 33: break;
@@ -1922,7 +1922,7 @@ class Lexer {
             // fall through
           case 50: break;
           case 19:
-            { tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
+            { errores.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
                    yybegin(YYINITIAL);
             }
             // fall through
@@ -1933,13 +1933,13 @@ class Lexer {
             // fall through
           case 52: break;
           case 21:
-            { tokens.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
+            { errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
                    yybegin(YYINITIAL);
             }
             // fall through
           case 53: break;
           case 22:
-            { tokens.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
+            { errores.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
                    yybegin(YYINITIAL);
             }
             // fall through
@@ -1980,7 +1980,7 @@ class Lexer {
             // fall through
           case 60: break;
           case 29:
-            { tokens.add(new Token(yytext(), yyline, yycolumn, "Error decimal"));
+            { errores.add(new Token(yytext(), yyline, yycolumn, "Error decimal"));
             }
             // fall through
           case 61: break;

@@ -71,8 +71,11 @@ Identifier = [:jletter:] [:jletterdigit:]*
 %%
 
 
-
+////////////////////////////////////////////////////////////////////////////////////////
 <YYINITIAL> {simbolos} {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
+
+
+
 /* keywords */
 <YYINITIAL> "address" | "as" | "bool" | "break" | "byte" | "bytes"((3[0-2])|([1-2][0-9])|[1-9])? |
 "constructor" | "continue" | "contract" | "delete" | "do" | "else" | "enum" | "false" | "for" | "from" | "function" |
@@ -110,8 +113,8 @@ Identifier = [:jletter:] [:jletterdigit:]*
 <YYINITIAL> {
 
 ///////////////////////////////JM////////////////////////////////////////////
-    ( "-"* ("0")+ {numbersH} ) *               {tokens.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
-    ( (".." | "...")+ "-"* {numberN})    { tokens.add(new Token(yytext(), yyline, yycolumn, "Error decimal"));}
+    ( "-"* ("0")+ {numbersH} ) *               {errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+    ( (".." | "...")+ "-"* {numberN})    { errores.add(new Token(yytext(), yyline, yycolumn, "Error decimal"));}
     /* identifiers */
     ({Identifier}|{simbolos})      { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
     ({numberN}{Identifier})         { string.setLength(0); string.append(yytext()); yybegin(indetifierError);}
@@ -228,7 +231,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
 /////////////////////////////////////////////////////////////////////////////
 <indetifierError> {
      \n  {
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador"));
                    yybegin(YYINITIAL);
                   }
     [^]           {string.append(yytext());}
@@ -239,7 +242,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
 <indetifierState> {
   
      \n  {
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "identificador"));
                    yybegin(YYINITIAL);
                   }
     \             {string.append(yytext()); yybegin(indetifierError);}
@@ -252,7 +255,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
 /////////////////////////////////////////////////////////////////////////////
 <decimalError> {
      \n  {
-                   tokens.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
                    yybegin(YYINITIAL);
                   }
     [^]           {string.append(yytext());}
