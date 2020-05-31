@@ -59,8 +59,13 @@ simbolosB       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
 // fuente: Manual de usuario de JFlex
 /*************************************************************************************/
 
-Identifier = [:jletter:] [:jletterdigit:]*
+Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
+
+
+/////////////////////////////////////////////////////
+////////////////////[  STATES  ]/////////////////////
+/////////////////////////////////////////////////////
 %state STRING
 %state hexaState
 %state numberState
@@ -81,38 +86,61 @@ Identifier = [:jletter:] [:jletterdigit:]*
 %state SpaceState
 %state selectNumber
 %%
+/////////////////////////////////////////////////////
 
-//<YYINITIAL> [^ simbolos] {tokens.add(new Token(yytext(), yyline, yycolumn, "ERRRRRRRRRRROR"));}
+
+
+/////////////////////////////////////////////////////
+////////////////////[  OPERADORES  ]/////////////////
+/////////////////////////////////////////////////////
 <YYINITIAL> {simbolos} {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
+/////////////////////////////////////////////////////
 
-/* keywords */
+
+
+/////////////////////////////////////////////////////
+////////////////////[  KEYWORDS  ]///////////////////
+/////////////////////////////////////////////////////
 <YYINITIAL> "address" | "as" | "bool" | "break" | "byte" | "bytes"((3[0-2])|([1-2][0-9])|[1-9])? |
 "constructor" | "continue" | "contract" | "delete" | "do" | "else" | "enum" | "false" | "for" | "from" | "function" |
 "if" | "import" | "int"(256|128|64|32|16|8)? | "internal" | "mapping" | "modifier" | "payable" | "pragma" | "private" |
 "public" | "return" | "returns" | "solidity" | "string" | "struct" | "this" | "true" | "ufixed" | "uint"(256|128|64|32|16|8)? |
 "var" | "view" | "while" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
+/////////////////////////////////////////////////////
 
-/**
-  * TRANSAC 
- */ 
+
+
+/////////////////////////////////////////////////////
+////////////////////[  TRANSAC  ]/////////////////////
+/////////////////////////////////////////////////////
 <YYINITIAL> "balance" | "call"| "callcode" | "delegatecall" | "send" | "transfer"
 { tokens.add(new Token(yytext(), yyline, yycolumn, "Transac")); }
+/////////////////////////////////////////////////////
 
-/**
-  * UNITS
- */
+
+
+/////////////////////////////////////////////////////
+////////////////////[  UNITS  ]//////////////////////
+/////////////////////////////////////////////////////
 <YYINITIAL> "days" | "ether" | "finney" | "hours" | "minutes" | "seconds" | "szabo" | "weeks"| "wei"| "years"
 { tokens.add(new Token(yytext(), yyline, yycolumn, "Units")); }
+/////////////////////////////////////////////////////
 
+
+
+/////////////////////////////////////////////////////
+////////////////////[  HEX  ]////////////////////////
+/////////////////////////////////////////////////////
 <YYINITIAL> "hex"\" { string.setLength(0); 
                       string.append(yytext());
-                      yybegin(hexaState);}
-                      
+                      yybegin(hexaState);}                 
 <YYINITIAL> "hex"\' { string.setLength(0); 
                       string.append(yytext());
                       yybegin(hexaStateC);}
-
 <YYINITIAL> "hex" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
+/////////////////////////////////////////////////////
+
+
 
 <YYINITIAL> {
 
@@ -147,20 +175,35 @@ Identifier = [:jletter:] [:jletterdigit:]*
     
 
 
-
+    /////////////////////////////////////////////////////
+   //////////////////[  LITERALES  ]////////////////////
+   /////////////////////////////////////////////////////
     \"                             { string.setLength(0); yybegin(STRING);}
     \'                             { string.setLength(0); yybegin(Chars);}
+   /////////////////////////////////////////////////////
 
-    /* comments */
+
+
+   /////////////////////////////////////////////////////
+   //////////////////[  COMENTARIOS  ]///////////////////
+   /////////////////////////////////////////////////////
     "/*"                          {
                                     errorLine = -1;
                                     errorColumn = -1; 
                                     yybegin(Comments);
                                    }
     "//"                           { yybegin(lineComment); }
+   /////////////////////////////////////////////////////
 
+
+   /////////////////////////////////////////////////////
+   //////////////////[  WHITESPACE  ]///////////////////
+   /////////////////////////////////////////////////////
     /* whitespace */
     {WhiteSpace}                   { /* ignore */ }
+  /////////////////////////////////////////////////////
+
+
 }
 
 <STRING> {
@@ -353,11 +396,11 @@ Identifier = [:jletter:] [:jletterdigit:]*
                   }
     (\ )+         {yybegin(SpaceState);}  
     {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
+    {numberN}     {string.append(yytext());}
     {Identifier}  {string.append(yytext());}
     [^]           {}//------------PONCHO LLAMA A ERROR
 }
 /////////////////////////////////////////////////////////
-
 
 
 
@@ -379,15 +422,46 @@ Identifier = [:jletter:] [:jletterdigit:]*
                    yybegin(YYINITIAL);}              
 
       {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
+      {numberN}     {string.append(yytext());}
       {Identifier}  {string.append(yytext());} 
       (\ )+          {yybegin(SpaceState);}               
-      ("/")+         {yybegin(lineComment); }
+      ("/")+         {yybegin(lineComment); }//ESTA VARA SE COME TODA LA LINEA 
       [^]          {}//------------PONCHO LLAMA A ERROR
 }
 /////////////////////////////////////////////////////////
 
 
 
+/////////////////////////////////////////////////////////
+//------------ESTOY A PUNTO DE BORRAR ESTO
+/////////////////////////////////////////////////////////
+///---------------[ERROR IDENTIFICADOR]----------------//
+/////////////////////////////////////////////////////////
+<indetifierError> {
+     (\n|;|"/")  { 
+                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
+                   yybegin(YYINITIAL);
+                  } 
+    // ("/")+         {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
+    //                yybegin(YYINITIAL);yybegin(lineComment); } 
+     ("/")+         {yybegin(lineComment); }
+    
+    {simbolos}    {string.append(yytext()); yybegin(indetifierError);}
+    {numberN}     {string.append(yytext());}
+    {Identifier}  {string.append(yytext());} 
+    (\ )+          {yybegin(SpaceState);}                 
+    //[^]           {string.append(yytext());}
+}
+/////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////
+//------------ESTOY A PUNTO DE BORRAR ESTO
 /////////////////////////////////////////////////////////
 ///-----------------[ERROR DECIMAL]--------------------//
 /////////////////////////////////////////////////////////
@@ -400,22 +474,6 @@ Identifier = [:jletter:] [:jletterdigit:]*
 }
 /////////////////////////////////////////////////////////
 
-
-
-
-/////////////////////////////////////////////////////////
-///---------------[ERROR IDENTIFICADOR]----------------//
-/////////////////////////////////////////////////////////
-<indetifierError> {
-     (\n|;|"/")  { 
-                   errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
-                   yybegin(YYINITIAL);
-                  } 
-    ("/")+         {errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificado000r"));
-                   yybegin(YYINITIAL);yybegin(lineComment); }             
-    [^]           {string.append(yytext());}
-}
-/////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////
@@ -431,6 +489,10 @@ Identifier = [:jletter:] [:jletterdigit:]*
     {Identifier} {string.append(yytext());;yybegin(indetifierError);}                    
 }
 /////////////////////////////////////////////////////////
+
+
+
+
 
 
 
