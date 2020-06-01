@@ -44,7 +44,7 @@ simbolos       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"
                  "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
 
 
-simbolosI       = "!" |"^" |"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+simbolosI       = "!"|"<="|"<" |">="|">"|"^"|
                  "~" | "+" |"-" | "*" |"%" | "**" |"<<" |">>"|"," |"."|
                  "(" | ")" |"[" | "]" | "?"|":" |"}"|"+="|"-="|"*=" |"/="                 
 
@@ -115,6 +115,18 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 //DIFERNETE IGUAL
 %state plusSimbolT4
 %state plusSimbolF4
+
+//TECHO
+%state plusSimbolT5
+%state plusSimbolF5
+
+//UNA O
+%state plusSimbolT6
+%state plusSimbolF6
+
+//UNA &
+%state plusSimbolT7
+%state plusSimbolF7
 
 %%
 /////////////////////////////////////////////////////
@@ -423,7 +435,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 ///---------------[IDENTIFICADORES]--------------------//
 /////////////////////////////////////////////////////////
 <indetifierState> {
-     
+     (\ )+         {}    
      (\n)  {
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador 1.1"));
                    yybegin(YYINITIAL);
@@ -431,9 +443,12 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
     (";")      {yybegin(plusSimbolT);}
     ("{")      {yybegin(plusSimbolT1);}     
     ("=")      {yybegin(plusSimbolX);} 
-    ("&&")     {yybegin(plusSimbolT2);} 
+    ("&&")     {yybegin(plusSimbolT2);}  
     ("==")     {yybegin(plusSimbolT3);}  
-    ("!=")     {yybegin(plusSimbolT4);}             
+    ("!=")     {yybegin(plusSimbolT4);}  
+    ("^")      {yybegin(plusSimbolT5);}  
+    ("||")     {yybegin(plusSimbolT6);} 
+    ("&")      {yybegin(plusSimbolT7);}           
     ("{"\n| ";"\n)  {
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2"));
                    string.setLength(0);
@@ -449,8 +464,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                    string.setLength(1);
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "operador1.5"));
                    yybegin(lineComment);           
-    }
-    (\ )+         {}        
+    }    
     {simbolosI}    {string.append(yytext()); yybegin(indetifierError);}
     {numberN}     {string.append(yytext());}
     {Identifier}  {string.append(yytext());}
@@ -476,6 +490,9 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
    ("&&")            {yybegin(plusSimbolF2);}  
    ("==")            {yybegin(plusSimbolF3);}  
    ("!=")            {yybegin(plusSimbolF4);}  
+   ("^")             {yybegin(plusSimbolF5);}   
+   ("||")             {yybegin(plusSimbolF6);} 
+   ("&")             {yybegin(plusSimbolF7);}  
    ("{"\n| ";"\n)  {
                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador2.2"));
                    string.setLength(0);
@@ -625,6 +642,16 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
 
 
+
+
+
+
+
+
+
+
+
+
 //--------------------------------[ IGUAL ]----------------------------------//
 //--------------------------------[INICIO]----------------------------------//
 
@@ -632,13 +659,13 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 ///------------------[ IGUAL TRUE ]---------------------//
 /////////////////////////////////////////////////////////
 <plusSimbolX> {
-   (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
-                  tokens.add(new Token("=", yyline, yycolumn, "operador1.3.p"));
-                  
-                  yybegin(YYINITIAL);
-          }
-   {Identifier}  {string.append("=");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("=");string.append(yytext());yybegin(indetifierError);}   
+   (\n| \ | {Identifier}|{numberN})  {  
+                                       tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+                                       tokens.add(new Token("=", yyline, yycolumn, "operador1.3.p"));
+                                       yybegin(YYINITIAL);
+                                       }
+   {Identifier}  {yybegin(YYINITIAL);} 
+   {simbolos}    {yybegin(YYINITIAL);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -648,13 +675,12 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 ///------------------[IGUAL FALSE]----------------------//
 /////////////////////////////////////////////////////////
 <plusSimbolX1> {
-   (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
-                  tokens.add(new Token("=", yyline, yycolumn, "operador1.3.p"));
-                  
-                  yybegin(YYINITIAL);
-          }
-   {Identifier}  {string.append("=");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("=");string.append(yytext());yybegin(indetifierError);}   
+   (\n| \ | {Identifier}|{numberN})  { errores.add(new Token(string.toString(), yyline, yycolumn, "ERROR identificador1.2.pPP"));
+                                        tokens.add(new Token("=", yyline, yycolumn, "operador1.3.p"));
+                                        yybegin(YYINITIAL);
+                                        }
+   {Identifier}  {yybegin(YYINITIAL);} 
+   {simbolos}    {yybegin(YYINITIAL);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -673,11 +699,10 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 <plusSimbolT2> {
    (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
                   tokens.add(new Token("&&", yyline, yycolumn, "operador1.3.p"));
-                  
                   yybegin(YYINITIAL);
-          }
-   {Identifier}  {string.append("&&");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("&&");string.append(yytext());yybegin(indetifierError);}   
+                  }
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -689,11 +714,10 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 <plusSimbolF2> {
    (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
                   tokens.add(new Token("&&", yyline, yycolumn, "operador1.3.p"));
-                  
                   yybegin(YYINITIAL);
           }
-   {Identifier}  {string.append("&&");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("&&");string.append(yytext());yybegin(indetifierError);}   
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -711,11 +735,10 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 <plusSimbolT3> {
    (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
                   tokens.add(new Token("==", yyline, yycolumn, "operador1.3.p"));
-                  
                   yybegin(YYINITIAL);
           }
-   {Identifier}  {string.append("==");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("==");string.append(yytext());yybegin(indetifierError);}   
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -727,11 +750,10 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 <plusSimbolF3> {
    (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
                   tokens.add(new Token("==", yyline, yycolumn, "operador1.3.p"));
-                  
                   yybegin(YYINITIAL);
           }
-   {Identifier}  {string.append("==");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("==");string.append(yytext());yybegin(indetifierError);}   
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -756,8 +778,8 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                   
                   yybegin(YYINITIAL);
           }
-   {Identifier}  {string.append("!=");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("!=");string.append(yytext());yybegin(indetifierError);}   
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -768,12 +790,11 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 /////////////////////////////////////////////////////////
 <plusSimbolF4> {
    (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
-                  tokens.add(new Token("!=", yyline, yycolumn, "operador1.3.p"));
-                  
+                  tokens.add(new Token("!=", yyline, yycolumn, "operador1.3.p"));                
                   yybegin(YYINITIAL);
           }
-   {Identifier}  {string.append("!=");string.append(yytext());yybegin(indetifierError);} 
-   {simbolos}    {string.append("!=");string.append(yytext());yybegin(indetifierError);}   
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
 }
 /////////////////////////////////////////////////////////
 
@@ -784,6 +805,117 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
 
 
+
+//----------------------------[ DOBLE IGUAL ]----------------------------------//
+//-------------------------------[INICIO]----------------------------------//
+
+/////////////////////////////////////////////////////////
+///------------------[ DOBLE IGUAL TRUE ]---------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolT5> {
+   (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+                  tokens.add(new Token("^", yyline, yycolumn, "operador1.3.p"));
+                  
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////////////////
+///------------------[DOBLE IGUAL FLASE]----------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolF5> {
+   (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
+                  tokens.add(new Token("^", yyline, yycolumn, "operador1.3.p"));                
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+//--------------------------------[ DOBLE IGUAL ]----------------------------------//
+//----------------------------------[FIN]----------------------------------//
+
+
+
+
+//----------------------------[ DOBLE IGUAL ]----------------------------------//
+//-------------------------------[INICIO]----------------------------------//
+
+/////////////////////////////////////////////////////////
+///------------------[ DOBLE IGUAL TRUE ]---------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolT6> {
+   (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+                  tokens.add(new Token("||", yyline, yycolumn, "operador1.3.p"));
+                  
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////////////////
+///------------------[DOBLE IGUAL FLASE]----------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolF6> {
+   (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
+                  tokens.add(new Token("||", yyline, yycolumn, "operador1.3.p"));                
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+//--------------------------------[ DOBLE IGUAL ]----------------------------------//
+//----------------------------------[FIN]----------------------------------//
+
+
+
+
+//----------------------------[ DOBLE IGUAL ]----------------------------------//
+//-------------------------------[INICIO]----------------------------------//
+
+/////////////////////////////////////////////////////////
+///------------------[ DOBLE IGUAL TRUE ]---------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolT7> {
+   (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+                  tokens.add(new Token("&", yyline, yycolumn, "operador1.3.p"));
+                  
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////////////////
+///------------------[DOBLE IGUAL FLASE]----------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolF7> {
+   (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
+                  tokens.add(new Token("&", yyline, yycolumn, "operador1.3.p"));                
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {yybegin(indetifierError);} 
+   {simbolos}    {yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+//--------------------------------[ DOBLE IGUAL ]----------------------------------//
+//----------------------------------[FIN]----------------------------------//
 
 
 
