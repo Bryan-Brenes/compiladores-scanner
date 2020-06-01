@@ -95,12 +95,10 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 <YYINITIAL> {////////////////////////////////////////////////////////////////////////////////
 
 
+/*Error Decimal */
 ( "-"* {numbersH}*  ("..")+ (".")*  "-"* {numbersH}* )  {errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
-( "-"* ("0")+ {numbersH} )                              { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+( "+"* "-"* ("0")+ {numbersH} )                              { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
 ( "-"* (".")+ ("-")* {numbersH} )                       { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
-//(".")+ { string.setLength(0);string.append(yytext()); yybegin(decimalError);}
-
-
 
 
 
