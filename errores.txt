@@ -14,3 +14,4 @@ contract Coin {
 		int $aa   //en este caso se espera que $ de un error lexico
     }
 }
+ola&, adios!, mult*   //deber dar errores porque son caracteres no validos
