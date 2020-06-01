@@ -93,6 +93,17 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 <YYINITIAL> "hex" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
 
 <YYINITIAL> {////////////////////////////////////////////////////////////////////////////////
+
+
+( "-"* {numbersH}*  ("..")+ (".")*  "-"* {numbersH}* )  {errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+( "-"* ("0")+ {numbersH} )                              { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+( "-"* (".")+ ("-")* {numbersH} )                       { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+//(".")+ { string.setLength(0);string.append(yytext()); yybegin(decimalError);}
+
+
+
+
+
 /* identifiers */
 {Identifier} { 
   tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));
