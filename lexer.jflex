@@ -44,7 +44,9 @@ simbolos       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"
                  "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
 
 
-simbolosI       = "!"|"~"|"," |"."|"(" | ")" |"[" | "]" | "?"|":" |"}"                
+simbolosI      = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+                 "~" | "+" |"-" | "*" |"%" | "**" |"<<" |">>"|"="|"," |"."|
+                 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="               
 
 simbolosB       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
                  "~" | "+" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," | ";" |
@@ -303,7 +305,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
      /////////////////////////////////////////////////////
      //////////////[  IDENTIFICADORES  ]//////////////////
      /////////////////////////////////////////////////////
-     ({Identifier}|{simbolos})          { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
+     ({Identifier}|{simbolos})         { string.setLength(0); string.append(yytext()); yybegin(indetifierState);}
     /////////////////////////////////////////////////////
 
 
@@ -653,7 +655,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                    yybegin(lineComment);           
     } 
           
-    {simbolos}   {string.append(yytext());}
+    {simbolos}    {string.append(yytext());}
     {numberN}     {string.append(yytext());}
     {Identifier}  {string.append(yytext());} 
     
@@ -1325,10 +1327,13 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 /////////////////////////////////////////////////////////
 <plusSimbolT15> {
    (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
-                  tokens.add(new Token("+", yyline, yycolumn, "operador1.3.p"));
-                  
+                  tokens.add(new Token("+", yyline, yycolumn, "operador1.3.p"));                 
                   yybegin(YYINITIAL);
           }
+     ("+")  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+                  tokens.add(new Token("++", yyline, yycolumn, "operador1.3.p"));                 
+                  yybegin(YYINITIAL);
+          }      
    {Identifier}  {yybegin(indetifierError);} 
    {simbolos}    {yybegin(indetifierError);}   
 }
@@ -1344,6 +1349,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                   tokens.add(new Token("+", yyline, yycolumn, "operador1.3.p"));                
                   yybegin(YYINITIAL);
           }
+          
    {Identifier}  {yybegin(indetifierError);} 
    {simbolos}    {yybegin(indetifierError);}   
  }
@@ -1363,6 +1369,9 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
                   
                   yybegin(YYINITIAL);
           }
+   ("-")  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+                  tokens.add(new Token("--", yyline, yycolumn, "operador1.3.p"));                 
+              
    {Identifier}  {yybegin(indetifierError);} 
    {simbolos}    {yybegin(indetifierError);}   
 }
