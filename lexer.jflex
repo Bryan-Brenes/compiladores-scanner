@@ -44,7 +44,7 @@ simbolos       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"
                  "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
 
 
-simbolosI       = "!" |"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+simbolosI       = "!" |"^" |"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
                  "~" | "+" |"-" | "*" |"%" | "**" |"<<" |">>"|"," |"."|
                  "(" | ")" |"[" | "]" | "?"|":" |"}"|"+="|"-="|"*=" |"/="                 
 
@@ -107,6 +107,10 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 //DOBLE AND 
 %state plusSimbolT2
 %state plusSimbolF2
+
+//DOBLE IGUAL
+%state plusSimbolT3
+%state plusSimbolF3
 
 %%
 /////////////////////////////////////////////////////
@@ -423,7 +427,8 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
     (";")      {yybegin(plusSimbolT);}
     ("{")      {yybegin(plusSimbolT1);}     
     ("=")      {yybegin(plusSimbolX);} 
-    ("&&")     {yybegin(plusSimbolT2);}               
+    ("&&")     {yybegin(plusSimbolT2);} 
+    ("==")     {yybegin(plusSimbolT3);}               
     ("{"\n| ";"\n)  {
                    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2"));
                    string.setLength(0);
@@ -463,7 +468,8 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
    (";"| (\ )+)      {yybegin(plusSimbolF);}
    ("{"| (\ )+)      {yybegin(plusSimbolF1);} 
    ("=")             {yybegin(plusSimbolX1);}
-   ("&&")            {yybegin(plusSimbolF2);}    
+   ("&&")            {yybegin(plusSimbolF2);}  
+   ("==")            {yybegin(plusSimbolF3);}  
    ("{"\n| ";"\n)  {
                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error de identificador2.2"));
                    string.setLength(0);
@@ -639,7 +645,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 //-------------------------------[INICIO]----------------------------------//
 
 /////////////////////////////////////////////////////////
-///------------------[ DOBLE TRUE ]---------------------//
+///------------------[ DOBLE AND TRUE ]---------------------//
 /////////////////////////////////////////////////////////
 <plusSimbolT2> {
    (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
@@ -655,7 +661,7 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 
 
 /////////////////////////////////////////////////////////
-///------------------[IGUAL FALSE]----------------------//
+///------------------[DOBLE AND FLASE]----------------------//
 /////////////////////////////////////////////////////////
 <plusSimbolF2> {
    (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
@@ -668,9 +674,46 @@ Identifier = [:jletter:] [:jletterdigit:]*// NO INCLUYE NEGATIVOS
 }
 /////////////////////////////////////////////////////////
 
-//--------------------------------[ IGUAL ]----------------------------------//
+//--------------------------------[ DOBLE AND ]----------------------------------//
 //----------------------------------[FIN]----------------------------------//
 
+
+
+//----------------------------[ DOBLE IGUAL ]----------------------------------//
+//-------------------------------[INICIO]----------------------------------//
+
+/////////////////////////////////////////////////////////
+///------------------[ DOBLE IGUAL TRUE ]---------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolT3> {
+   (\n| \ | {Identifier}|{numberN})  {    tokens.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.p"));
+                  tokens.add(new Token("==", yyline, yycolumn, "operador1.3.p"));
+                  
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {string.append("==");string.append(yytext());yybegin(indetifierError);} 
+   {simbolos}    {string.append("==");string.append(yytext());yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////////////////
+///------------------[DOBLE IGUAL FLASE]----------------------//
+/////////////////////////////////////////////////////////
+<plusSimbolF3> {
+   (\n| \ | {Identifier}|{numberN})  {    errores.add(new Token(string.toString(), yyline, yycolumn, "identificador1.2.pPP"));
+                  tokens.add(new Token("==", yyline, yycolumn, "operador1.3.p"));
+                  
+                  yybegin(YYINITIAL);
+          }
+   {Identifier}  {string.append("==");string.append(yytext());yybegin(indetifierError);} 
+   {simbolos}    {string.append("==");string.append(yytext());yybegin(indetifierError);}   
+}
+/////////////////////////////////////////////////////////
+
+//--------------------------------[ DOBLE IGUAL ]----------------------------------//
+//----------------------------------[FIN]----------------------------------//
 
 
 
