@@ -13,8 +13,7 @@ import java.util.ArrayList;
 
 %{
     StringBuffer string = new StringBuffer();
-    public static int errorLine = -1;
-    public static int errorColumn = -1;
+    public static int bandera = 0;
     public static ArrayList<Token> tokens = new ArrayList<>();  
     public static ArrayList<Token> errores = new ArrayList<>();  
 %}
@@ -37,9 +36,7 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 numbersH       = [0-9]+
 lettersH       = [A-F]+
 numberN        = [0-9]+ | "."([0-9]+)
-simbolos       = "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
-                 "~" | "+" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," | ";" |
-                 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" 
+noSimbolos     = [\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\}]
 
 /*************************************************************************************/
 /* comments */
@@ -49,21 +46,22 @@ TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
 // Comment can be the last line of the file, without line terminator.
 EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}?
 DocumentationComment = "/**" {CommentContent} "*"+ "/"
-CommentContent       = \* \** [^/*]*
-
-// fuente: Manual de usuario de JFlex
+CommentContent       = ( [^*] | \*+ [^/*] )*
 /*************************************************************************************/
 
 Identifier = [:jletter:] [:jletterdigit:]*
 
+DecIntegerLiteral = 0 | [1-9][0-9]*
+
 %state STRING
 %state hexaState
+%state hexaStateC
+%state hexaStateError
+%state hexaStateCError
 %state numberState
 %state NaturalNumbers
 %state Chars
-%state Comments
-%state lineComment
-%state errorNumeros
+%state Identificadorcillo
 
 %%
 
@@ -88,143 +86,272 @@ Identifier = [:jletter:] [:jletterdigit:]*
 
 <YYINITIAL> "hex"\" { string.setLength(0); 
                       string.append(yytext());
-                      yybegin(hexaState);}
+                      yybegin(hexaState);}                 
+<YYINITIAL> "hex"\' { string.setLength(0); 
+                      string.append(yytext());
+                      yybegin(hexaStateC);}
+<YYINITIAL> "hex" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
 
-<YYINITIAL> {
-    /* identifiers */
-    {Identifier}                   { tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));}
+<YYINITIAL> {////////////////////////////////////////////////////////////////////////////////
+/* identifiers */
+{Identifier} { 
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));
+}
 
-    /* literals */
-    {numberN}                      {
-                                    string.setLength(0);
-                                    string.append(yytext());
-                                    yybegin(numberState);
-                                   }
+/* literals */
+{numberN} {
+  string.setLength(0);
+  string.append(yytext());
+  yybegin(numberState);
+}
 
-    \"                             { string.setLength(0); yybegin(STRING);}
-    \'                             { string.setLength(0); yybegin(Chars);}
+\" { 
+  string.setLength(0); yybegin(STRING); bandera = yycolumn;
+}
 
-    /* operators */
-    "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
-    "~" | "+" |"-" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
-    "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="           {tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));}
+\' { 
+  string.setLength(0); yybegin(Chars); bandera = yycolumn;
+}
 
-    /* comments */
-    "/*"                          {
-                                    errorLine = -1;
-                                    errorColumn = -1; 
-                                    yybegin(Comments);
-                                   }
-    "//"                           { yybegin(lineComment); }
+/* operators */
+"!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
+"~" | "+" |"-" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
+"(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" {
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+}
 
-    /* whitespace */
-    {WhiteSpace}                   { /* ignore */ }
+/* comments */
+{Comment} { /* ignore */ }
+
+/* whitespace */
+{WhiteSpace} { /* ignore */ }
+
+}///////////////////////////////////////////////////////////////////////////////////////////////
+
+<Identificadorcillo>{
+    {WhiteSpace} | {LineTerminator} | "{" | "}" | "(" | ")" | ";" | "[" | "]"
+    { errores.add(new Token(string.toString(), yyline, bandera, "Error: identificador")); yybegin(YYINITIAL); }
+
+    [^\{\}\(\)\;\r\n\t\f]          { string.append(yytext()); }
+
 }
 
 <STRING> {
-    \"                            {
-                                   yybegin(YYINITIAL);
-                                   tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal string"));
-                                  }
-    [^\"\\]+                      { string.append( yytext() ); }
-    {Identifier}                  { string.append( yytext() ); }
-    "\\n"                         { string.append( yytext() ); }
-    "\\xNN"                       { string.append( yytext() ); }
-    "\\uNNNN"                     { string.append( yytext() ); }
-    // "\'"                          {  }
+  \" {
+    yybegin(YYINITIAL);
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal string"));
+  }
+
+  {LineTerminator} { 
+    System.out.println("HOLA");
+    //string.append( yytext() );
+    errores.add(new Token(string.toString(), yyline, bandera, "Error stringASAD"));
+    yybegin(YYINITIAL);
+  }
+    
+  [^\n\r\"\'\\]+ { 
+    string.append( yytext() );  
+  }
+    
+  [^] {
+    errores.add(new Token(string.toString(), yyline, yycolumn, "Error string"));
+    yybegin(YYINITIAL);
+  }
 }
 
 <Chars> {
-    \'                            {
-                                   yybegin(YYINITIAL);
-                                   tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal char"));
-                                  }
-    [^\n\r\"\'\\]+                  { string.append( yytext() ); }
-    {Identifier}                  { string.append( yytext() ); }
+  \' {
+    yybegin(YYINITIAL);
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal char"));
+  }
+
+  {LineTerminator} { 
+    System.out.println("HOLA2");
+    string.append( yytext() );
+    errores.add(new Token(string.toString(), yyline, bandera, "Error char"));
+    yybegin(YYINITIAL);
+  }
+
+  [^\n\r\"\'\\]+ {
+    string.append( yytext() );
+  }
+
+  [^] {
+    errores.add(new Token(string.toString(), yyline, yycolumn, "Error char"));
+    yybegin(YYINITIAL);
+  }
 }
 
 <hexaState> {
-    \"                            { yybegin(YYINITIAL);
-                                    string.append( yytext() ); 
-                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal hexadecimal/Palabra Reservada")); }
-    {lettersH}                    { string.append( yytext() ); }
-    {numbersH}                    { string.append( yytext() ); }
+  \" { 
+    yybegin(YYINITIAL);
+    string.append( yytext() ); 
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal hexadecimal/Palabra Reservada")); 
+  }
+
+  \' {
+    errores.add(new Token(yytext(), yyline, yycolumn, "Error: comillas de cierre incorrectas"));
+    yybegin(YYINITIAL);
+  }
+
+  {WhiteSpace} {
+    errores.add(new Token(yytext(), yyline, yycolumn, "Error: hexadecimal sin cierre"));
+    yybegin(YYINITIAL);
+  }
+
+  ";" {
+    tokens.add(new Token(yytext(), yyline, yycolumn, "Operador")); 
+    errores.add(new Token("Comillas", yyline, yycolumn, "Error: hexadecimal sin cierre"));
+    yybegin(YYINITIAL);
+  }
+
+  {lettersH} {
+    string.append( yytext() );
+  }
+
+  {numbersH} {
+    string.append( yytext() ); 
+  }
+
+  [^A-Fa-f0-9\;] {
+    errores.add(new Token(yytext(), yyline, yycolumn, "Error: Numero no es hexadecimal"));
+    yybegin(hexaStateError);
+  }
 }
 
+<hexaStateError> {
+  \" { 
+    yybegin(YYINITIAL);
+  }
+
+  [^] {
+
+  }
+
+}
+
+<hexaStateC> {
+  \' {
+    yybegin(YYINITIAL);
+    string.append( yytext() ); 
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal hexadecimal/Palabra Reservada")); 
+  }
+
+  \" {
+    errores.add(new Token(yytext(), yyline, yycolumn, "Error: comillas de cierre incorrectas"));
+    yybegin(YYINITIAL);
+  }
+
+  {WhiteSpace} {
+    errores.add(new Token(yytext(), yyline, yycolumn, "Error: hexadecimal sin cierre"));
+    yybegin(YYINITIAL);
+  }
+
+  ";" {
+    tokens.add(new Token(yytext(), yyline, yycolumn, "Operador")); 
+    errores.add(new Token("Comillas", yyline, yycolumn, "Error: hexadecimal sin cierre"));
+    yybegin(YYINITIAL);
+  }
+
+  {lettersH} { 
+    string.append( yytext() ); 
+  }
+
+  {numbersH} {
+    string.append( yytext() ); 
+  }
+
+  [^A-Fa-f0-9\;] {
+    errores.add(new Token(yytext(), yyline, yycolumn, "Error: Numero no es hexadecimal"));
+    yybegin(YYINITIAL);
+  }
+}
+
+<hexaStateCError> {
+  \' { 
+    yybegin(YYINITIAL);
+  }
+
+  [^] {
+
+  }
+}
 
 <numberState> {
-    {WhiteSpace}                  {
-                                    yybegin(YYINITIAL);
-                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
-                                  }
-    {simbolos}                    {
-                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
-                                    tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
-                                    yybegin(YYINITIAL);
-                                  }
-    {numbersH}                    { string.append(yytext());}
-    "."                           { string.append(yytext());}
-    "e"                           { yybegin(NaturalNumbers);
-                                    string.append(yytext());}
-    [^]                           {
-                                    string.append(yytext());
-                                    yybegin(errorNumeros);
-                                  }
+  {WhiteSpace} | "," {
+    yybegin(YYINITIAL);
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+  }
+
+  ")" {
+    yybegin(YYINITIAL);
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "literal numerico"));
+    tokens.add(new Token(")", yyline+1, yycolumn, "Operador"));
+  }
+
+  ";" {
+    yybegin(YYINITIAL);
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "literal numerico"));
+    tokens.add(new Token(";", yyline+1, yycolumn, "Operador"));
+  }
+
+  {numbersH} { string.append(yytext());}
+  "." { 
+    string.append(yytext());
+  }
+
+  "e" { 
+    yybegin(NaturalNumbers);
+    string.append(yytext());
+  }
+
+  [A-DF-Za-df-z] { 
+    string.append(yytext()); yybegin(Identificadorcillo); 
+  }
 }
 
 <NaturalNumbers> {
-    {WhiteSpace} | {simbolos}     {
-                                    yybegin(YYINITIAL);
-                                    tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
-                                  }
-    {numbersH}                    { string.append(yytext());}
-    "-"                           { string.append(yytext());}
-    [^]                           {
-                                    string.append(yytext());
-                                    yybegin(errorNumeros);
-                                  }
-}
+  {WhiteSpace} {
+    if(bandera == 1){
+      yybegin(YYINITIAL);
+      errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
+    }
+    else{
+      yybegin(YYINITIAL);
+      tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+    }
+  }
 
-<Comments> {
-    "*/"                          { 
-                                    if(errorLine != -1){
-                                      errores.add(new Token("*", errorLine, errorColumn, "Error: linea sin * <comentario bloque>"));
-                                    }
-                                    yybegin(YYINITIAL);
-                                  }
+  ";" {
+    if(bandera == 1){
+      yybegin(YYINITIAL);
+      errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
+      tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+    }
+    else{
+      yybegin(YYINITIAL);
+      tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+      tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+    }
+  }
 
-    \*{InputCharacter}*{LineTerminator}         { }
-    {InputCharacter}*{LineTerminator}                            { 
-                                                                  if(errorLine == -1){
-                                                                    errorLine = yyline;
-                                                                    errorColumn = yycolumn;
-                                                                  }
-                                                                }
-    <<EOF>>                       { errores.add(new Token("/**", yyline, yycolumn, "Error: llave comentario abierta")); }
-}
+  {numbersH} { 
+    string.append(yytext());
+  }
 
-<lineComment> {
-    {LineTerminator}              { yybegin(YYINITIAL); }
-    .*                            { }  
-}
+  "-" { 
+    string.append(yytext());
+  }
 
-<errorNumeros> {
-  {WhiteSpace}                    {
-                                    yybegin(YYINITIAL);
-                                    errores.add(new Token(string.toString(), yyline, yycolumn, "Error: numero mal formado"));
-                                  }
-  [^]                             {string.append(yytext());} 
+  [^\-\;] { 
+    bandera = 1; 
+    string.append(yytext());
+  }
 }
 
 /* error fallback */
-[^]                              { 
-                                  System.out.println(yyline);
-                                  System.out.println(yycolumn);
-                                  throw new Error("Illegal character <"+ yytext()+">"); 
-                                 }
-
-/*
-*
-asda
-
-*/
+[^] {
+  System.out.println(yyline);
+  System.out.println(yycolumn); 
+  // throw new Error("Illegal character <"+ yytext()+">"); 
+}
