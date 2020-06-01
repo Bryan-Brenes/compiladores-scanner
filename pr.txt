@@ -1,3 +1,6 @@
+int 2A =2E-2;
+int B = 2E-2;
+
 3VARAS//
 3varas//
 2j{m {//  
