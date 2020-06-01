@@ -96,9 +96,14 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 
 /*Error Decimal */
-( "-"* {numbersH}*  ("..")+ (".")*  "-"* {numbersH}* )  {errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
-( "+"* "-"* ("0")+ {numbersH} )                              { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
-( "-"* (".")+ ("-")* {numbersH} )                       { errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+( "-"* {numbersH}*  ("..")+ (".")*  "-"* {numbersH}* )  
+{errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+
+( "+"* "-"* ("0")+ {numbersH} )                              
+{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+
+( "-"* (".")+ ("-")* {numbersH} )                       
+{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
 
 
 
@@ -107,6 +112,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));
 }
 
+
 /* literals */
 {numberN} {
   string.setLength(0);
@@ -114,17 +120,20 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   yybegin(numberState);
 }
 
+
 \" { 
   string.setLength(0); yybegin(STRING); bandera = yycolumn;
 }
+
 
 \' { 
   string.setLength(0); yybegin(Chars); bandera = yycolumn;
 }
 
+
 /* operators */
-"!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"^"|
-"~" | "+" |"-" | "*" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
+"!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+"~" | "+" |"-" | "*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |";"|"."|
 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
 }
