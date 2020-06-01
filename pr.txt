@@ -1,5 +1,7 @@
 pragma solidity >=0.4.22 <0.6.0;
 
+2ab
+
 /// @title Voting with delegation.
 contract Ballot {
     // This declares a new complex type which will
@@ -60,16 +62,16 @@ contract Ballot {
         // As a second argument, you can also provide an
         // explanation about what went wrong.
         require(
-            msg.sender == chairperson,
-            "Only chairperson can give right to vote."
+            msg.sender == chairperson;
+            "Only chairperson can give right to vote"
         );
         require(
-            !voters[voter].voted,
-            "The voter already voted."
+            !voters[voter].voted;
         );
         require(voters[voter].weight == 0);
         voters[voter].weight = 1;
     }
+
 
     /// Delegate your vote to the voter `to`.
     function delegate(address to) public {
@@ -87,14 +89,15 @@ contract Ballot {
         // In this case, the delegation will not be executed,
         // but in other situations, such loops might
         // cause a contract to get "stuck" completely.
-        while (voters[to].delegate != address(0)) {
+        while (voters[to].delegate != address( 0 )) {
             to = voters[to].delegate;
 
             // We found a loop in the delegation, not allowed.
             require(to != msg.sender, "Found loop in delegation.");
         }
 
-        // Since `sender` is a reference, this
+
+// Since `sender` is a reference, this
         // modifies `voters[msg.sender].voted`
         sender.voted = true;
         sender.delegate = to;
@@ -114,7 +117,7 @@ contract Ballot {
     /// to proposal `proposals[proposal].name`.
     function vote(uint proposal) public {
         Voter storage sender = voters[msg.sender];
-        require(sender.weight != 0, "Has no right to vote");
+        //require (sender.weight += 0, "Has no right to vote");
         require(!sender.voted, "Already voted.");
         sender.voted = true;
         sender.vote = proposal;
@@ -139,7 +142,7 @@ contract Ballot {
         }
     }
 
-    // Calls winningProposal() function to get the index
+     // Calls winningProposal() function to get the index
     // of the winner contained in the proposals array and then
     // returns the name of the winner
     function winnerName() public view
@@ -148,3 +151,4 @@ contract Ballot {
         winnerName_ = proposals[winningProposal()].name;
     }
 }
+  
