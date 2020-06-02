@@ -64,7 +64,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 %state Chars
 %state Identificadorcillo
 %state hope
-
+%state filtro
 %%
 
 /* keywords */
@@ -99,24 +99,25 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 /*Error Decimal */
 ( "-"* {numbersH}*  ("..")+ (".")*  "-"* {numbersH}* )  
-{errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));banderaN =0;}
+{errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
 
 ( "+"* "-"* ("0")+ {numbersH} )                              
-{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));banderaN =0;}
+{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
 
 ( "-"* (".")+ ("-")* {numbersH} )                       
-{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));banderaN =0;}
+{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
 
 
 
 
 // j@m
 /* identifiers */
-{Identifier} { 
-  tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));
-  stringN.setLength(0);
-  stringN.append(yytext());
-  banderaN = 1;
+{Identifier} {
+stringN.setLength(0);
+string.setLength(0);
+string.append(yytext());
+stringN.append(yytext());
+yybegin(filtro);
 }
 
 
@@ -131,13 +132,11 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 \" { 
   string.setLength(0); yybegin(STRING); bandera = yycolumn;
-  banderaN =0;
 }
 
 
 \' { 
   string.setLength(0); yybegin(Chars); bandera = yycolumn;
-  banderaN =0;
 }
 
 
@@ -146,7 +145,6 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 "~" | "+" |"-" | "*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |";"|"."|
 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
-  banderaN =0;
 }
 
 /* comments */
@@ -157,37 +155,49 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 
 [^A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\}] {
-  
-  if(banderaN == 1 ){
-    stringN.append(yytext()); yybegin(hope);
-    
-   }
-   else{
      stringN.setLength(0);
-     stringN.append(yytext());yybegin(hope);
-   } 
+     stringN.append(yytext());
+     yybegin(hope);
    }
 
 
 }///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-<hope>{
-  ( \n|\ )  { 
-        errores.add(new Token(stringN.toString(), yyline, yycolumn, "Error: identificador"));
-        banderaN =0;
-        yybegin(YYINITIAL);
-  }
-  [^]     {stringN.append(yytext());}
+
+<filtro>{
+[^ A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\} ]   {
+  stringN.append(yytext());
+  yybegin(hope);
+}
+
+[^]   {
+  tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
+  yybegin(YYINITIAL);
+}
+
 }
 
 
 
 
+<hope>{
+  ({WhiteSpace} |"{" | "}" | "(" | ")" | ";" | "[" | "]" |"//" )  {       
+        errores.add(new Token(stringN.toString(), yyline, yycolumn, "Error: identificador"));
+        yybegin(YYINITIAL);
+  }
+  [^]  {stringN.append(yytext());yybegin(hope);}
+}
+
+
+
+
+/////////////////////////////////////
+
+
 <Identificadorcillo>{
     {WhiteSpace} | {LineTerminator} | "{" | "}" | "(" | ")" | ";" | "[" | "]"
     { errores.add(new Token(string.toString(), yyline, bandera, "Error: identificador")); yybegin(YYINITIAL); }
-
     [^\{\}\(\)\;\r\n\t\f]          { string.append(yytext()); }
 
 }
