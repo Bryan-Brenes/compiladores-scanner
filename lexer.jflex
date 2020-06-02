@@ -13,6 +13,8 @@ import java.util.ArrayList;
 
 %{
     StringBuffer string = new StringBuffer();
+    StringBuffer stringN = new StringBuffer();
+    public static int banderaN = 0;
     public static int bandera = 0;
     public static ArrayList<Token> tokens = new ArrayList<>();  
     public static ArrayList<Token> errores = new ArrayList<>();  
@@ -36,7 +38,6 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 numbersH       = [0-9]+
 lettersH       = [A-F]+
 numberN        = [0-9]+ | "."([0-9]+)
-noSimbolos     = [\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\}]
 
 /*************************************************************************************/
 /* comments */
@@ -62,6 +63,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 %state NaturalNumbers
 %state Chars
 %state Identificadorcillo
+%state hope
 
 %%
 
@@ -97,19 +99,24 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 /*Error Decimal */
 ( "-"* {numbersH}*  ("..")+ (".")*  "-"* {numbersH}* )  
-{errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+{errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));banderaN =0;}
 
 ( "+"* "-"* ("0")+ {numbersH} )                              
-{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));banderaN =0;}
 
 ( "-"* (".")+ ("-")* {numbersH} )                       
-{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
+{ errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));banderaN =0;}
 
 
 
+
+// j@m
 /* identifiers */
 {Identifier} { 
   tokens.add(new Token(yytext(), yyline, yycolumn, "Identificador"));
+  stringN.setLength(0);
+  stringN.append(yytext());
+  banderaN = 1;
 }
 
 
@@ -118,16 +125,19 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   string.setLength(0);
   string.append(yytext());
   yybegin(numberState);
+  banderaN =0;
 }
 
 
 \" { 
   string.setLength(0); yybegin(STRING); bandera = yycolumn;
+  banderaN =0;
 }
 
 
 \' { 
   string.setLength(0); yybegin(Chars); bandera = yycolumn;
+  banderaN =0;
 }
 
 
@@ -136,15 +146,43 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 "~" | "+" |"-" | "*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |";"|"."|
 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+  banderaN =0;
 }
 
 /* comments */
-{Comment} { /* ignore */ }
+{Comment} { /* ignore */ ;banderaN =0;}
 
 /* whitespace */
-{WhiteSpace} { /* ignore */ }
+{WhiteSpace} { /* ignore */ ;banderaN =0;}
+
+
+[^A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\}] {
+  
+  if(banderaN == 1 ){
+    stringN.append(yytext()); yybegin(hope);
+    
+   }
+   else{
+     stringN.setLength(0);
+     stringN.append(yytext());yybegin(hope);
+   } 
+   }
+
 
 }///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+<hope>{
+  ( \n|\ )  { 
+        errores.add(new Token(stringN.toString(), yyline, yycolumn, "Error: identificador"));
+        banderaN =0;
+        yybegin(YYINITIAL);
+  }
+  [^]     {stringN.append(yytext());}
+}
+
+
+
 
 <Identificadorcillo>{
     {WhiteSpace} | {LineTerminator} | "{" | "}" | "(" | ")" | ";" | "[" | "]"

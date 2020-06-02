@@ -1,3 +1,4 @@
+
 pragma solidity >=0.4.22 <0.6.0;
 
 /// @title Voting with delegation.
@@ -161,8 +162,21 @@ contract Ballot {
         --1
         ++200
         ++024
-        HOLa()
-        HOLA     {}
+}
 
+
+10;
+require(voters[voter].weight == 22 );
+voters(voter).weight = "Hola Mundo";
+
+function @jM (Poncho, Danny) {
 
 }
+
+function !JM (Poncho, Danny) {
+
+}
+
+2ea2;
+
+"Juanma";
