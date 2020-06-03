@@ -31,7 +31,7 @@ import java.util.ArrayList;
   }
   return 0;
 %eofval}
-simbolos ="~" | ")" | "]" |"}"
+simbolos = "~" | ")" | "]" |"}"
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
@@ -186,7 +186,7 @@ yybegin(filtro);
 /*************************************[ filtro ]************************************************/
 <filtro>{
 
- ("{" | "}" | "(" | ")" | ";" | "[" | "]" |"//"|"."|";" )   {  
+ ("{" | "}" | "(" | ")" | ";" | "[" | "]" |"//"|"."|";" | ",")   {  
   tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
   tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
   yybegin(YYINITIAL);
@@ -246,7 +246,7 @@ yybegin(filtro);
     yybegin(YYINITIAL);
   }
     
-  [^\n\r\"\'\\]+ { 
+  [^\n\r\"\']+ { 
     string.append( yytext() );  
   }
     
@@ -271,7 +271,7 @@ yybegin(filtro);
     yybegin(YYINITIAL);
   }
 
-  [^\n\r\"\'\\]+ {
+  [^\n\r\"\']+ {
     string.append( yytext() );
   }
 
@@ -315,21 +315,23 @@ yybegin(filtro);
   }
 
   [^A-Fa-f0-9\;] {
-    errores.add(new Token(yytext(), yyline, yycolumn, "Error: Numero no es hexadecimal"));
+    string.append(yytext());
     yybegin(hexaStateError);
   }
 }
 
 /*************************************[ hexa error ]************************************************/
 <hexaStateError> {
-  \" { 
+  {WhiteSpace}   { yybegin(YYINITIAL); errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Numero no es hexadecimal")); }
+  \" | \; { 
     yybegin(YYINITIAL);
+    string.append(yytext());
+    errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Numero no es hexadecimal"));
   }
 
   [^] {
-
+    string.append(yytext());
   }
-
 }
 
 /*************************************[ hexa comillas simples ]************************************************/
@@ -365,20 +367,24 @@ yybegin(filtro);
   }
 
   [^A-Fa-f0-9\;] {
-    errores.add(new Token(yytext(), yyline, yycolumn, "Error: Numero no es hexadecimal"));
-    yybegin(YYINITIAL);
+    string.append(yytext());
+    yybegin(hexaStateCError);
   }
 }
 
 
 /*************************************[ hexa error  ]************************************************/
 <hexaStateCError> {
-  \' { 
+  {WhiteSpace}   { yybegin(YYINITIAL); errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Numero no es hexadecimal")); }
+
+  \' | \; { 
     yybegin(YYINITIAL);
+    string.append(yytext());
+    errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Numero no es hexadecimal"));
   }
 
   [^] {
-
+    string.append(yytext());
   }
 }
  
