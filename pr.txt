@@ -3,6 +3,9 @@
 // days22 
 // 33minutes 
 
+funcion @Carro(correr){
+    
+}
 
 @jm
 jm@jm

@@ -188,6 +188,11 @@ yybegin(filtro);
 /*************************************[ filtro ]************************************************/
 <filtro>{
 
+ ("{" | "}" | "(" | ")" | ";" | "[" | "]" |"//"|"."|";" )   {  
+  tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+  yybegin(YYINITIAL);
+  }
 
 {simbolos}  {string.append(yytext()) ;
              errores.add(new Token(string.toString(), yyline, yycolumn, "Error Identificador"));
@@ -198,11 +203,6 @@ yybegin(filtro);
   yybegin(stateNosibol);
 }
 
-;  {  
-  tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
-  tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
-  yybegin(YYINITIAL);
-  }
 
 [^]   {
   tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
@@ -213,7 +213,12 @@ yybegin(filtro);
 
 /*************************************[ No simbolos filtros ]************************************************/
 <stateNosibol>{
-  ({WhiteSpace} |"{" | "}" | "(" | ")" | ";" | "[" | "]" |"//" )  {       
+   ("{" | "}" | "(" | ")" | ";" | "[" | "]" |"//" )  {  
+        tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));     
+        errores.add(new Token(stringN.toString(), yyline, yycolumn, "Error: identificador"));
+        yybegin(YYINITIAL);
+  }
+  ({WhiteSpace})  {   
         errores.add(new Token(stringN.toString(), yyline, yycolumn, "Error: identificador"));
         yybegin(YYINITIAL);
   }
