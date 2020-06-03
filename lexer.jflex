@@ -31,7 +31,9 @@ import java.util.ArrayList;
   }
   return 0;
 %eofval}
-
+simbolos ="!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+"~" | "+" |"-" | "*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |"."|
+"(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
@@ -112,6 +114,17 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 // j@m
 /* identifiers */
+{simbolos}+ {Identifier}+ {
+  string.setLength(0);
+  string.append(yytext());
+  errores.add(new Token(string.toString(), yyline, yycolumn, "Error Decimal"));
+  yybegin(YYINITIAL);
+
+}
+
+
+// j@m
+/* identifiers */
 {Identifier} {
 stringN.setLength(0);
 string.setLength(0);
@@ -166,15 +179,27 @@ yybegin(filtro);
 
 
 <filtro>{
+
+
+{simbolos}  {string.append(yytext()) ;
+             errores.add(new Token(string.toString(), yyline, yycolumn, "Error Identificador"));
+            yybegin(YYINITIAL);}
+
 [^ A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\} ]   {
   stringN.append(yytext());
   yybegin(hope);
 }
 
+;  {  
+  tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+  yybegin(YYINITIAL);
+  }
+
 [^]   {
   tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
   yybegin(YYINITIAL);
-}
+}            
 
 }
 
@@ -342,8 +367,8 @@ yybegin(filtro);
 
   }
 }
-
-<numberState> {
+ 
+ <numberState> {
   {WhiteSpace} | "," {
     yybegin(YYINITIAL);
     tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
@@ -370,6 +395,14 @@ yybegin(filtro);
     yybegin(NaturalNumbers);
     string.append(yytext());
   }
+
+"!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+"~" | "+" |"-" | "**" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|"."|
+"(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" {
+  tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+  tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+  yybegin(YYINITIAL);
+}
 
   [A-DF-Za-df-z] { 
     string.append(yytext()); yybegin(Identificadorcillo); 
