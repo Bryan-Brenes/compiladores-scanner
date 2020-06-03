@@ -31,9 +31,7 @@ import java.util.ArrayList;
   }
   return 0;
 %eofval}
-simbolos ="!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
-"~" | "+" |"-" | "*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |"."|
-"(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/="
+simbolos ="~" | ")" | "]" |"}"
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
