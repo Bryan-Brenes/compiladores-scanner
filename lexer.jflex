@@ -16,6 +16,8 @@ import java.util.ArrayList;
     StringBuffer stringN = new StringBuffer();
     public static int banderaN = 0;
     public static int bandera = 0;
+    public static int bandera2 = 0;
+    public static int bandera3 = 0;
     public static ArrayList<Token> tokens = new ArrayList<>();  
     public static ArrayList<Token> errores = new ArrayList<>();  
 %}
@@ -64,6 +66,7 @@ Identifier = [:jletter:] [:jletterdigit:]*
 %state Identificadorcillo
 %state stateNosibol
 %state filtro
+%state otraMas
 %%
 
 
@@ -140,6 +143,8 @@ yybegin(filtro);
   string.append(yytext());
   yybegin(numberState);
   banderaN =0;
+  bandera2 = 0;
+  bandera3= 0;
 }
 
 
@@ -184,28 +189,30 @@ yybegin(filtro);
 
 
 /*************************************[ filtro ]************************************************/
-<filtro>{
-
- ("{" | "}" | "(" | ")" | ";" | "[" | "]" |"//"|"."|";" | ",")   {  
-  tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
-  tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
-  yybegin(YYINITIAL);
+<filtro>{    
+  "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+  "+" |"-" | "*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |";"|"."|
+  "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" 
+  {  
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
+    tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+    yybegin(YYINITIAL);
   }
 
-{simbolos}  {string.append(yytext()) ;
-             errores.add(new Token(string.toString(), yyline, yycolumn, "Error Identificador"));
-            yybegin(YYINITIAL);}
+  {simbolos}  {string.append(yytext()) ;
+              errores.add(new Token(string.toString(), yyline, yycolumn, "Error Identificador"));
+              yybegin(YYINITIAL);}
 
-[^ A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\} ]   {
-  stringN.append(yytext());
-  yybegin(stateNosibol);
-}
+  [^ A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\} ]   {
+    stringN.append(yytext());
+    yybegin(stateNosibol);
+  }
 
 
-[^]   {
-  tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
-  yybegin(YYINITIAL);
-}            
+  [^]   {
+    tokens.add(new Token(string.toString(), yyline, yycolumn, "Identificador"));
+    yybegin(YYINITIAL);
+  }            
 
 }
 
@@ -413,7 +420,7 @@ yybegin(filtro);
   }
 
   "e" { 
-    yybegin(NaturalNumbers);
+    yybegin(otraMas);
     string.append(yytext());
   }
 
@@ -430,6 +437,37 @@ yybegin(filtro);
   }
 }
 
+<otraMas> {
+  "-" {
+    string.append(yytext());
+    yybegin(NaturalNumbers);
+  }
+
+  [0-9]+ {
+    if (bandera3 == 1){
+      string.append(yytext());
+      errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
+      yybegin(YYINITIAL);
+    }
+    else{
+      string.append(yytext());
+      yybegin(NaturalNumbers);
+    }
+  }
+
+  [\;\!\&\^\=\!\|\<\>\~\+\*\/\%\,\(\)\[\]\?\:\{\}] {
+    if (bandera3 == 0){
+      string.append(yytext());
+      bandera3 = 1;
+      yybegin(otraMas);
+    }
+    else{
+      errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
+      tokens.add(new Token(yytext(), yyline, yycolumn, "Error: Literal numerico"));
+      yybegin(YYINITIAL);
+    }
+  }
+}
 
 /*************************************[ numeros naturales ]************************************************/
 <NaturalNumbers> {
@@ -444,7 +482,9 @@ yybegin(filtro);
     }
   }
 
-  ";" {
+  "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
+  "~" | "+" | "**" |"/" |"%" |"*"| "<<" |">>"|"="|"," |";"|
+  "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" {
     if(bandera == 1){
       yybegin(YYINITIAL);
       errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
@@ -456,18 +496,22 @@ yybegin(filtro);
       tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
     }
   }
-
-
-/*************************************[ numeros HEX ]************************************************/
   {numbersH} { 
     string.append(yytext());
   }
 
-  "-" { 
-    string.append(yytext());
+  "-" {
+    if(bandera2 == 0){
+      string.append(yytext());
+    }
+    else{
+      yybegin(YYINITIAL);
+      tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+      tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+    }
   }
 
-  [^\-\;] { 
+  [^\-\;\!\&\^\=\!\|\<\>\~\+\*\/\%\,\(\)\[\]\?\:\{\}] { 
     bandera = 1; 
     string.append(yytext());
   }
