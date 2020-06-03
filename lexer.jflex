@@ -272,7 +272,6 @@ yybegin(filtro);
   }
 
   {LineTerminator} { 
-    System.out.println("HOLA2");
     string.append( yytext() );
     errores.add(new Token(string.toString(), yyline, bandera, "Error char"));
     yybegin(YYINITIAL);
@@ -440,7 +439,15 @@ yybegin(filtro);
 <otraMas> {
   "-" {
     string.append(yytext());
+    bandera2 = 1;
     yybegin(NaturalNumbers);
+  }
+
+  [A-Za-z]+([A-Za-z]*[0-9]*)* {
+    System.out.println("Hola");
+    string.append(yytext());
+    errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
+    yybegin(YYINITIAL);
   }
 
   [0-9]+ {
@@ -501,10 +508,22 @@ yybegin(filtro);
   }
 
   "-" {
-    if(bandera2 == 0){
-      string.append(yytext());
+    if((bandera2 == 1) && (bandera == 1)){
+      yybegin(YYINITIAL);
+      errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
+      tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
     }
-    else{
+    else if ((bandera2 == 1) && (bandera == 0)){
+      yybegin(YYINITIAL);
+      tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
+      tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+    }
+    else if ((bandera2 == 0) && (bandera == 1)){
+      yybegin(YYINITIAL);
+      errores.add(new Token(string.toString(), yyline, yycolumn, "Error: Literal numerico"));
+      tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
+    }
+    else {
       yybegin(YYINITIAL);
       tokens.add(new Token(string.toString(), yyline, yycolumn, "Literal numerico"));
       tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
