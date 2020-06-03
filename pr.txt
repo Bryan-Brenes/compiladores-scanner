@@ -1,10 +1,14 @@
 
 // ESTE ES UN EJEMPLO DE CODIGO TOMADO DE INTERNET (CON FALLOS)
-// @TEST
-// TES@ONE
-// 22VAR
-// WWW!!
-//!test
+// days22 
+// 33minutes 
+
+
+@jm
+jm@jm
+
+
+"@hola"
 
 /// @title Voting with delegation.
 contract Ballot {
@@ -17,17 +21,10 @@ contract Ballot {
         address delegate; // person delegated to
         uint vote;   // index of the voted proposal
 
-        int  @TEST = test;
-        char TES@ONE = 222;
-        22VAR = 123; 
-        WWW! = 22;
-        !test = 34;
+        days22 Pdays  = "lunes";
+        33minutes Pminutes = "10:00";
+        
     }
 
-    // This is a type for a single proposal.
-    struct Proposal {
-        bytes32 name;   // short name (up to 32 bytes)
-        uint voteCount; // number of accumulated votes
-    }
 
    

@@ -1,5 +1,10 @@
 pragma solidity >=0.4.22 <0.6.0;
 
+@jm
+jm@jm
+
+
+"@hola"
 /// @title Voting with delegation.
 contract Ballot {
     // This declares a new complex type which will

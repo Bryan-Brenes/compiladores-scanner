@@ -51,11 +51,10 @@ EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}?
 DocumentationComment = "/**" {CommentContent} "*"+ "/"
 CommentContent       = ( [^*] | \*+ [^/*] )*
 /*************************************************************************************/
-
 Identifier = [:jletter:] [:jletterdigit:]*
 
-DecIntegerLiteral = 0 | [1-9][0-9]*
 
+/*************************************[STATES]************************************************/
 %state STRING
 %state hexaState
 %state hexaStateC
@@ -65,9 +64,13 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 %state NaturalNumbers
 %state Chars
 %state Identificadorcillo
-%state hope
+%state stateNosibol
 %state filtro
 %%
+
+
+
+/*************************************[PRINCIPALES]**********************************************/
 
 /* keywords */
 <YYINITIAL> "address" | "as" | "bool" | "break" | "byte" | "bytes"((3[0-2])|([1-2][0-9])|[1-9])? |
@@ -76,15 +79,15 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 "public" | "return" | "returns" | "solidity" | "string" | "struct" | "this" | "true" | "ufixed" | "uint"(256|128|64|32|16|8)? |
 "var" | "view" | "while" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
 
-/**
-  * TRANSAC 
- */ 
+
+/*************************************[TRANSAC ]**********************************************/
+
 <YYINITIAL> "balance" | "call"| "callcode" | "delegatecall" | "send" | "transfer"
 { tokens.add(new Token(yytext(), yyline, yycolumn, "Transac")); }
 
-/**
-  * UNITS
- */
+
+
+/*************************************[UNITS]**********************************************/
 <YYINITIAL> "days" | "ether" | "finney" | "hours" | "minutes" | "seconds" | "szabo" | "weeks"| "wei"| "years"
 { tokens.add(new Token(yytext(), yyline, yycolumn, "Units")); }
 
@@ -96,10 +99,11 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
                       yybegin(hexaStateC);}
 <YYINITIAL> "hex" { tokens.add(new Token(yytext().trim(), yyline, yycolumn, "Palabra reservada"));}
 
-<YYINITIAL> {////////////////////////////////////////////////////////////////////////////////
+<YYINITIAL> {
 
 
-/*Error Decimal */
+/*************************************[Error Decimal]************************************************/
+
 ( "-"* {numbersH}*  ("..")+ (".")*  "-"* {numbersH}* )  
 {errores.add(new Token(yytext(), yyline, yycolumn, "Error Decimal"));}
 
@@ -112,8 +116,8 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 
 
-// j@m
-/* identifiers */
+
+/*************************************[ identifiers]************************************************/
 {simbolos}+ {Identifier}+ {
   string.setLength(0);
   string.append(yytext());
@@ -122,9 +126,6 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
 }
 
-
-// j@m
-/* identifiers */
 {Identifier} {
 stringN.setLength(0);
 string.setLength(0);
@@ -134,7 +135,8 @@ yybegin(filtro);
 }
 
 
-/* literals */
+
+/*************************************[ literals ]************************************************/
 {numberN} {
   string.setLength(0);
   string.append(yytext());
@@ -153,13 +155,15 @@ yybegin(filtro);
 }
 
 
-/* operators */
+
+/*************************************[ operators ]************************************************/
 "!" | "&&"|"^" | "=="|"!="|"||"|"<="|"<" |">="|">" |"&"|"|"|"^"|
 "~" | "+" |"-" | "*" |"/" |"%" |"**"| "<<" |">>"|"="|"," |";"|"."|
 "(" | ")" |"[" | "]" | "?"|":" |"{"|"}"|"+="|"-="|"*=" |"/=" {
   tokens.add(new Token(yytext(), yyline, yycolumn, "Operador"));
 }
 
+/*************************************[ comments ]************************************************/
 /* comments */
 {Comment} { /* ignore */ ;banderaN =0;}
 
@@ -167,17 +171,21 @@ yybegin(filtro);
 {WhiteSpace} { /* ignore */ ;banderaN =0;}
 
 
+/*************************************[ No simbolos ]************************************************/
 [^A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\}] {
      stringN.setLength(0);
      stringN.append(yytext());
-     yybegin(hope);
+     yybegin(stateNosibol);
    }
 
 
-}///////////////////////////////////////////////////////////////////////////////////////////////
+}
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
+/*************************************[ filtro ]************************************************/
 <filtro>{
 
 
@@ -187,7 +195,7 @@ yybegin(filtro);
 
 [^ A-Za-z0-9\n\r\f\t\!\&\^\=\|\<\>\~\+\-\*\/\%\,\;\.\(\)\[\]\?\:\{\} ]   {
   stringN.append(yytext());
-  yybegin(hope);
+  yybegin(stateNosibol);
 }
 
 ;  {  
@@ -203,22 +211,17 @@ yybegin(filtro);
 
 }
 
-
-
-
-<hope>{
+/*************************************[ No simbolos filtros ]************************************************/
+<stateNosibol>{
   ({WhiteSpace} |"{" | "}" | "(" | ")" | ";" | "[" | "]" |"//" )  {       
         errores.add(new Token(stringN.toString(), yyline, yycolumn, "Error: identificador"));
         yybegin(YYINITIAL);
   }
-  [^]  {stringN.append(yytext());yybegin(hope);}
+  [^]  {stringN.append(yytext());yybegin(stateNosibol);}
 }
 
 
-
-
-/////////////////////////////////////
-
+/*************************************[ identificador especial ]************************************************/
 
 <Identificadorcillo>{
     {WhiteSpace} | {LineTerminator} | "{" | "}" | "(" | ")" | ";" | "[" | "]"
@@ -227,6 +230,8 @@ yybegin(filtro);
 
 }
 
+
+/*************************************[ strings  ]************************************************/
 <STRING> {
   \" {
     yybegin(YYINITIAL);
@@ -234,8 +239,6 @@ yybegin(filtro);
   }
 
   {LineTerminator} { 
-    System.out.println("HOLA");
-    //string.append( yytext() );
     errores.add(new Token(string.toString(), yyline, bandera, "Error stringASAD"));
     yybegin(YYINITIAL);
   }
@@ -250,6 +253,8 @@ yybegin(filtro);
   }
 }
 
+
+/*************************************[ chars ]************************************************/
 <Chars> {
   \' {
     yybegin(YYINITIAL);
@@ -273,6 +278,8 @@ yybegin(filtro);
   }
 }
 
+
+/*************************************[ hexa ]************************************************/
 <hexaState> {
   \" { 
     yybegin(YYINITIAL);
@@ -310,6 +317,7 @@ yybegin(filtro);
   }
 }
 
+/*************************************[ hexa error ]************************************************/
 <hexaStateError> {
   \" { 
     yybegin(YYINITIAL);
@@ -321,6 +329,7 @@ yybegin(filtro);
 
 }
 
+/*************************************[ hexa comillas simples ]************************************************/
 <hexaStateC> {
   \' {
     yybegin(YYINITIAL);
@@ -358,6 +367,8 @@ yybegin(filtro);
   }
 }
 
+
+/*************************************[ hexa error  ]************************************************/
 <hexaStateCError> {
   \' { 
     yybegin(YYINITIAL);
@@ -368,6 +379,7 @@ yybegin(filtro);
   }
 }
  
+ /*************************************[ numeros  ]************************************************/
  <numberState> {
   {WhiteSpace} | "," {
     yybegin(YYINITIAL);
@@ -409,6 +421,8 @@ yybegin(filtro);
   }
 }
 
+
+/*************************************[ numeros naturales ]************************************************/
 <NaturalNumbers> {
   {WhiteSpace} {
     if(bandera == 1){
@@ -434,6 +448,8 @@ yybegin(filtro);
     }
   }
 
+
+/*************************************[ numeros HEX ]************************************************/
   {numbersH} { 
     string.append(yytext());
   }
@@ -448,7 +464,8 @@ yybegin(filtro);
   }
 }
 
-/* error fallback */
+
+/************************************[ error fallback ]************************************************/
 [^] {
   System.out.println(yyline);
   System.out.println(yycolumn); 
